@@ -28,7 +28,7 @@ function AppContent() {
   return (
     <div>
       <Navbar />
-      <main className="pt-36 md:pt-40">
+      <main className="pt-44 md:pt-48">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

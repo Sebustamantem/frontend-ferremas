@@ -28,15 +28,22 @@ const Checkout = () => {
         }
         setPayLoading(true)
         try {
-            const res = await api.post("/payment/create-preference", { address })
-            console.log("Preference response:", res.data)
-            const url = res.data.sandbox_init_point || res.data.init_point
-            if (!url) throw new Error("No se obtuvo URL de pago")
-            window.location.href = url
+            const res = await api.post("/payment/create", { address })
+            const form = document.createElement("form")
+            form.method = "POST"
+            form.action = res.data.url
+
+            const input = document.createElement("input")
+            input.type = "hidden"
+            input.name = "token_ws"
+            input.value = res.data.token
+
+            form.appendChild(input)
+            document.body.appendChild(form)
+            form.submit()
         } catch (err) {
             console.error("Error pago:", err)
             alert("Error al procesar el pago. Intenta nuevamente.")
-        } finally {
             setPayLoading(false)
         }
     }
@@ -236,7 +243,7 @@ const Checkout = () => {
                                     className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white py-4 rounded-xl font-bold text-lg transition shadow-md flex items-center justify-center gap-2"
                                 >
                                     <CreditCard size={20} />
-                                    {payLoading ? "Procesando..." : "Pagar con Mercado Pago"}
+                                    {payLoading ? "Procesando..." : "Pagar con WebPay"}
                                 </button>
 
                                 {!isAddressComplete && (

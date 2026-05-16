@@ -10,10 +10,29 @@ const Navbar = () => {
   const [isSearchOpen, SetIsSearchOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [indicators, setIndicators] = useState({})
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
   const navigate = useNavigate()
   const menuRef = useRef(null)
+
+  useEffect(() => {
+    const fetchIndicators = async () => {
+      try {
+        const res = await fetch("https://mindicador.cl/api")
+        const data = await res.json()
+        setIndicators({
+          dolar: data.dolar?.valor,
+          euro: data.euro?.valor,
+          uf: data.uf?.valor,
+          utm: data.utm?.valor,
+        })
+      } catch (err) {
+        console.error("Error cargando indicadores:", err)
+      }
+    }
+    fetchIndicators()
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -31,8 +50,38 @@ const Navbar = () => {
     navigate("/")
   }
 
+  const formatCLP = (value) =>
+    value ? `$${Number(value).toLocaleString("es-CL")}` : "..."
+
   return (
     <div className="fixed top-0 left-0 w-full z-50">
+
+      {/* Barra indicadores económicos */}
+      <div className="bg-gray-900 text-white text-xs py-1.5 px-4 overflow-x-auto">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-6 whitespace-nowrap">
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1">
+              <span className="text-gray-400">USD</span>
+              <span className="font-semibold text-green-400">{formatCLP(indicators.dolar)}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-gray-400">EUR</span>
+              <span className="font-semibold text-blue-400">{formatCLP(indicators.euro)}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-gray-400">UF</span>
+              <span className="font-semibold text-yellow-400">{formatCLP(indicators.uf)}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-gray-400">UTM</span>
+              <span className="font-semibold text-orange-400">{formatCLP(indicators.utm)}</span>
+            </span>
+          </div>
+          <span className="hidden sm:block text-gray-500 text-xs">
+            Valores en CLP — fuente: mindicador.cl
+          </span>
+        </div>
+      </div>
 
       {/* Barra de anuncio */}
       <div className="bg-black text-white text-xs text-center py-2 px-4">
@@ -134,16 +183,15 @@ const Navbar = () => {
                           <p className="text-sm font-bold text-gray-800 truncate">{user.name}</p>
                         </div>
 
-                        {/* Links Admin */}
                         {user.role === "admin" && (
                           <>
                             <Link to="/admin/products" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition">
-                              Productos
+                              ⚙️ Productos
                             </Link>
                             <Link to="/admin/users" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-b border-gray-100">
-                              Usuarios
+                              👥 Usuarios
                             </Link>
                           </>
                         )}
