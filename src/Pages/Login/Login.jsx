@@ -63,6 +63,13 @@ const Login = () => {
                     ¿No tienes cuenta?{" "}
                     <Link to="/register" className="font-semibold text-orange-500 underline">Regístrate</Link>
                 </p>
+
+                <p className="text-center text-sm mt-3 text-gray-500">
+                    ¿Eres maestro o PYME?{" "}
+                    <Link to="/registro-pro" className="font-semibold text-gray-700 hover:underline">
+                        Regístrate aquí
+                    </Link>
+                </p>
             </div>
         </div>
     )
