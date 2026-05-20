@@ -224,6 +224,22 @@ const Navbar = () => {
                           👤 Mi cuenta
                         </Link>
 
+                          {/* Links Vendedor */}
+                          {user.role === "vendedor" && (
+                            <Link to="/vendedor" onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center px-5 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition border-b border-gray-100">
+                              🛒 Panel Vendedor
+                            </Link>
+                          )}
+
+                          {/* Links Bodeguero */}
+                          {user.role === "bodeguero" && (
+                            <Link to="/bodeguero" onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center px-5 py-3 text-sm font-semibold text-green-600 hover:bg-green-50 transition border-b border-gray-100">
+                              📦 Panel Bodeguero
+                            </Link>
+                          )}
+
                         <button onClick={handleLogout}
                           className="w-full text-left px-5 py-3 text-sm text-red-500 hover:bg-red-50 transition">
                           Cerrar sesión
