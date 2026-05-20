@@ -1,20 +1,42 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useCart } from "../../context/CartContext"
 import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
-import { ShoppingCart, Trash2, CreditCard, ArrowLeft } from "lucide-react"
+import { ShoppingCart, Trash2, CreditCard, ArrowLeft, Landmark } from "lucide-react"
 import api from "../../api/axios"
 
 const Checkout = () => {
-    const { cart, removeFromCart, total } = useCart()
+    const { cart, removeFromCart, total, clearCart } = useCart()
     const { user } = useAuth()
     const navigate = useNavigate()
     const [payLoading, setPayLoading] = useState(false)
+    const [payMethod, setPayMethod] = useState("transbank")
+    const [installments, setInstallments] = useState(3)
+    const [myCredit, setMyCredit] = useState(null)
     const [address, setAddress] = useState({
         region: "", city: "", street: "", number: "", zip: "", phone: ""
     })
 
+    const isPro = ["maestro", "pyme"].includes(user?.user_type)
     const isAddressComplete = address.region && address.city && address.street && address.phone
+    const shipping = total >= 50000 ? 0 : 4990
+
+    // Calcular total con descuento primera compra
+    const discountedTotal = isPro && !user?.first_purchase_used
+        ? Math.round(total * 0.7)
+        : total
+    const finalTotal = discountedTotal + shipping
+    const available = myCredit
+        ? Number(myCredit.credit_limit) - Number(myCredit.balance_used)
+        : 0
+
+    useEffect(() => {
+        if (isPro) {
+            api.get("/ferre-credit/my")
+                .then(res => setMyCredit(res.data))
+                .catch(err => console.error(err))
+        }
+    }, [isPro])
 
     if (!user) {
         navigate("/login")
@@ -27,23 +49,27 @@ const Checkout = () => {
             return
         }
         setPayLoading(true)
+
         try {
-            const res = await api.post("/payment/create", { address })
-            const form = document.createElement("form")
-            form.method = "POST"
-            form.action = res.data.url
-
-            const input = document.createElement("input")
-            input.type = "hidden"
-            input.name = "token_ws"
-            input.value = res.data.token
-
-            form.appendChild(input)
-            document.body.appendChild(form)
-            form.submit()
+            if (payMethod === "transbank") {
+                const res = await api.post("/payment/create", { address })
+                const form = document.createElement("form")
+                form.method = "POST"
+                form.action = res.data.url
+                const input = document.createElement("input")
+                input.type = "hidden"
+                input.name = "token_ws"
+                input.value = res.data.token
+                form.appendChild(input)
+                document.body.appendChild(form)
+                form.submit()
+            } else {
+                const res = await api.post("/ferre-credit/pay", { installments, address })
+                await clearCart()
+                navigate(`/checkout/success?order_id=${res.data.order_id}&method=ferrecredito`)
+            }
         } catch (err) {
-            console.error("Error pago:", err)
-            alert("Error al procesar el pago. Intenta nuevamente.")
+            alert(err.response?.data?.message || "Error al procesar el pago.")
             setPayLoading(false)
         }
     }
@@ -79,6 +105,17 @@ const Checkout = () => {
                         {/* Izquierda */}
                         <div className="lg:col-span-2 flex flex-col gap-4">
 
+                            {/* Descuento primera compra */}
+                            {isPro && !user?.first_purchase_used && (
+                                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+                                    <span className="text-2xl">🎉</span>
+                                    <div>
+                                        <p className="text-sm font-bold text-green-700">¡30% de descuento en tu primera compra!</p>
+                                        <p className="text-xs text-green-600">Beneficio exclusivo para {user.user_type === "maestro" ? "maestros" : "PYMEs"}</p>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Productos */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-100">
@@ -108,6 +145,77 @@ const Checkout = () => {
                                             </button>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+
+                            {/* Método de pago */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h2 className="font-bold text-gray-800 mb-4">Método de Pago</h2>
+                                <div className="flex flex-col gap-3">
+
+                                    {/* Transbank */}
+                                    <label className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition ${payMethod === "transbank" ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:border-gray-300"
+                                        }`}>
+                                        <input type="radio" name="payMethod" value="transbank"
+                                            checked={payMethod === "transbank"}
+                                            onChange={() => setPayMethod("transbank")}
+                                            className="accent-orange-500" />
+                                        <CreditCard size={22} className="text-orange-500" />
+                                        <div>
+                                            <p className="font-semibold text-gray-800 text-sm">Transbank Webpay</p>
+                                            <p className="text-xs text-gray-400">Pago con tarjeta de crédito o débito</p>
+                                        </div>
+                                    </label>
+
+                                    {/* FerreCredito solo para maestros/PYMEs */}
+                                    {isPro && (
+                                        <label className={`flex flex-col gap-3 p-4 rounded-xl border-2 cursor-pointer transition ${payMethod === "ferrecredito" ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"
+                                            } ${!myCredit?.is_active ? "opacity-50 cursor-not-allowed" : ""}`}>
+                                            <div className="flex items-center gap-4">
+                                                <input type="radio" name="payMethod" value="ferrecredito"
+                                                    checked={payMethod === "ferrecredito"}
+                                                    onChange={() => setPayMethod("ferrecredito")}
+                                                    disabled={!myCredit?.is_active}
+                                                    className="accent-gray-900" />
+                                                <Landmark size={22} className="text-gray-700" />
+                                                <div className="flex-1">
+                                                    <p className="font-semibold text-gray-800 text-sm">FerreCredito</p>
+                                                    <p className="text-xs text-gray-400">Compra a cuotas sin tarjeta bancaria</p>
+                                                </div>
+                                                {myCredit?.is_active ? (
+                                                    <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full font-medium">
+                                                        Disponible: ${available.toLocaleString("es-CL")}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs bg-red-100 text-red-500 px-2 py-1 rounded-full font-medium">
+                                                        No activo
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Selector de cuotas */}
+                                            {payMethod === "ferrecredito" && myCredit?.is_active && (
+                                                <div className="flex flex-col gap-2 mt-2 pl-8">
+                                                    <p className="text-xs font-medium text-gray-600">Número de cuotas:</p>
+                                                    <div className="flex gap-2">
+                                                        {[3, 6, 9, 12].map((n) => (
+                                                            <button key={n} type="button"
+                                                                onClick={() => setInstallments(n)}
+                                                                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${installments === n
+                                                                        ? "bg-gray-900 text-white"
+                                                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                                                    }`}>
+                                                                {n}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <p className="text-xs text-gray-400">
+                                                        ${Math.round(finalTotal / installments).toLocaleString("es-CL")} / mes por {installments} meses
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </label>
+                                    )}
                                 </div>
                             </div>
 
@@ -212,23 +320,46 @@ const Checkout = () => {
                                     ))}
                                 </div>
 
-                                <div className="border-t border-gray-100 pt-4 mb-4">
-                                    <div className="flex justify-between text-sm mb-2">
+                                <div className="border-t border-gray-100 pt-4 mb-4 flex flex-col gap-2">
+                                    <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Subtotal</span>
                                         <span className="font-medium">${total.toLocaleString("es-CL")}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm mb-2">
+
+                                    {isPro && !user?.first_purchase_used && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-green-600 font-medium">Descuento 30%</span>
+                                            <span className="text-green-600 font-medium">
+                                                -${(total - discountedTotal).toLocaleString("es-CL")}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Despacho</span>
                                         <span className="font-medium text-green-500">
-                                            {total >= 50000 ? "Gratis" : "$4.990"}
+                                            {shipping === 0 ? "Gratis" : `$${shipping.toLocaleString("es-CL")}`}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-lg font-bold mt-3 pt-3 border-t border-gray-100">
+
+                                    <div className="flex justify-between text-lg font-bold mt-2 pt-3 border-t border-gray-100">
                                         <span>Total</span>
                                         <span className="text-orange-500">
-                                            ${(total >= 50000 ? total : total + 4990).toLocaleString("es-CL")}
+                                            ${finalTotal.toLocaleString("es-CL")}
                                         </span>
                                     </div>
+
+                                    {payMethod === "ferrecredito" && myCredit?.is_active && (
+                                        <div className="bg-gray-50 rounded-xl p-3 mt-2 text-center">
+                                            <p className="text-xs text-gray-500">
+                                                {installments} cuotas de{" "}
+                                                <span className="font-bold text-gray-800">
+                                                    ${Math.round(finalTotal / installments).toLocaleString("es-CL")}
+                                                </span>
+                                                /mes
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {total < 50000 && (
@@ -242,8 +373,8 @@ const Checkout = () => {
                                     disabled={!isAddressComplete || payLoading}
                                     className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white py-4 rounded-xl font-bold text-lg transition shadow-md flex items-center justify-center gap-2"
                                 >
-                                    <CreditCard size={20} />
-                                    {payLoading ? "Procesando..." : "Pagar con WebPay"}
+                                    {payMethod === "transbank" ? <CreditCard size={20} /> : <Landmark size={20} />}
+                                    {payLoading ? "Procesando..." : payMethod === "transbank" ? "Pagar con Transbank" : "Pagar con FerreCredito"}
                                 </button>
 
                                 {!isAddressComplete && (
@@ -253,7 +384,7 @@ const Checkout = () => {
                                 )}
 
                                 <p className="text-xs text-gray-400 text-center mt-3">
-                                    Pago 100% seguro con Mercado Pago
+                                    🔒 Pago 100% seguro
                                 </p>
                             </div>
                         </div>
