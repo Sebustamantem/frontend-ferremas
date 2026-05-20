@@ -188,8 +188,16 @@ const Navbar = () => {
                           )}
                         </div>
 
-                        {/* Links Admin */}
+                        {/* Link Admin */}
                         {user.role === "admin" && (
+                          <Link to="/admin/products" onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-b border-gray-100">
+                            Panel admin
+                          </Link>
+                        )}
+
+                        {/* Links Admin */}
+                        {false && user.role === "admin" && (
                           <>
                             <Link to="/admin/products" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition">
@@ -207,7 +215,7 @@ const Navbar = () => {
                         )}
 
                         {/* Links Maestro/PYME */}
-                        {["maestro", "pyme"].includes(user.user_type) && (
+                        {user.role === "cliente" && ["maestro", "pyme"].includes(user.user_type) && (
                           <Link to="/mi-credito" onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
                             💳 Mi FerreCredito
@@ -215,12 +223,12 @@ const Navbar = () => {
                         )}
 
                         <Link to="/mis-pedidos" onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
+                          className={`${user.role !== "cliente" ? "hidden" : "flex"} items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition`}>
                           📦 Mis pedidos
                         </Link>
 
                         <Link to="/perfil" onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
+                          className={`${user.role !== "cliente" ? "hidden" : "flex"} items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition border-b border-gray-100`}>
                           👤 Mi cuenta
                         </Link>
 
