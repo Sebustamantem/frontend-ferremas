@@ -5,6 +5,9 @@ import Register from "./Pages/Register/Register"
 import RegisterPro from "./Pages/Register/RegisterPro"
 import AdminProducts from "./Pages/Admin/AdminProducts"
 import AdminUsers from "./Pages/Admin/AdminUsers"
+import AdminCredits from "./Pages/Admin/AdminCredits"
+import VendedorPanel from "./Pages/Vendedor/VendedorPanel"
+import BodegueroPanel from "./Pages/Bodeguero/BodegueroPanel"
 import Products from "./Pages/Products/Products"
 import Checkout from "./Pages/Checkout/Checkout"
 import Success from "./Pages/Checkout/Success"
@@ -28,6 +31,13 @@ const AdminRoute = ({ children }) => {
   return children
 }
 
+const RoleRoute = ({ children, roles }) => {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/login" />
+  if (!roles.includes(user.role)) return <Navigate to="/" />
+  return children
+}
+
 function AppContent() {
   return (
     <div>
@@ -48,6 +58,9 @@ function AppContent() {
           <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/credits" element={<AdminRoute><AdminCredits /></AdminRoute>} />
+          <Route path="/vendedor" element={<RoleRoute roles={["admin", "vendedor"]}><VendedorPanel /></RoleRoute>} />
+          <Route path="/bodeguero" element={<RoleRoute roles={["admin", "bodeguero"]}><BodegueroPanel /></RoleRoute>} />
         </Routes>
       </main>
     </div>
