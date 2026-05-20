@@ -3,9 +3,22 @@ import { ShoppingCart, Heart, Search, SlidersHorizontal } from "lucide-react"
 import api from "../../api/axios"
 import { useCart } from "../../context/CartContext"
 import { useAuth } from "../../context/AuthContext"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 const categories = ["Todas", "Herramientas", "Construcción", "Electricidad", "Plomería", "Pintura", "Jardín", "Fijaciones", "Otros"]
+
+const normalizeCategory = (value = "") =>
+    value
+        .toString()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+
+const getCategoryFromParam = (param) => {
+    if (!param) return "Todas"
+    const normalizedParam = normalizeCategory(param)
+    return categories.find((category) => normalizeCategory(category) === normalizedParam) || "Todas"
+}
 
 const Products = () => {
     const [products, setProducts] = useState([])
@@ -17,6 +30,11 @@ const Products = () => {
     const { addToCart } = useCart()
     const { user } = useAuth()
     const navigate = useNavigate()
+    const [searchParams, setSearchParams] = useSearchParams()
+
+    useEffect(() => {
+        setActiveCategory(getCategoryFromParam(searchParams.get("categoria")))
+    }, [searchParams])
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -35,7 +53,9 @@ const Products = () => {
 
     useEffect(() => {
         let result = [...products]
-        if (activeCategory !== "Todas") result = result.filter((p) => p.category === activeCategory)
+        if (activeCategory !== "Todas") {
+            result = result.filter((p) => normalizeCategory(p.category) === normalizeCategory(activeCategory))
+        }
         if (search.trim()) result = result.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
         if (sortBy === "price_asc") result.sort((a, b) => a.price - b.price)
         if (sortBy === "price_desc") result.sort((a, b) => b.price - a.price)
@@ -46,6 +66,15 @@ const Products = () => {
     const handleAddToCart = async (productId) => {
         if (!user) { navigate("/login"); return }
         await addToCart(productId)
+    }
+
+    const handleCategoryChange = (category) => {
+        setActiveCategory(category)
+        if (category === "Todas") {
+            setSearchParams({})
+            return
+        }
+        setSearchParams({ categoria: normalizeCategory(category) })
     }
 
     return (
@@ -77,7 +106,7 @@ const Products = () => {
 
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
                     {categories.map((cat) => (
-                        <button key={cat} onClick={() => setActiveCategory(cat)}
+                        <button key={cat} onClick={() => handleCategoryChange(cat)}
                             className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition ${activeCategory === cat
                                     ? "bg-orange-500 text-white shadow-md"
                                     : "bg-white text-gray-600 border border-gray-200 hover:border-orange-400 hover:text-orange-500"

@@ -2,14 +2,14 @@ import { Link } from "react-router-dom"
 import { Hammer, HardHat, Zap, Pipette, Paintbrush, Trees, Wrench, ShoppingBag } from "lucide-react"
 
 const categories = [
-    { name: "Herramientas", icon: <Hammer size={28} />, path: "/categoria/herramientas", color: "bg-orange-100 text-orange-600" },
-    { name: "Construcción", icon: <HardHat size={28} />, path: "/categoria/construccion", color: "bg-yellow-100 text-yellow-600" },
-    { name: "Electricidad", icon: <Zap size={28} />, path: "/categoria/electricidad", color: "bg-blue-100 text-blue-600" },
-    { name: "Plomería", icon: <Pipette size={28} />, path: "/categoria/plomeria", color: "bg-cyan-100 text-cyan-600" },
-    { name: "Pintura", icon: <Paintbrush size={28} />, path: "/categoria/pintura", color: "bg-pink-100 text-pink-600" },
-    { name: "Jardín", icon: <Trees size={28} />, path: "/categoria/jardin", color: "bg-green-100 text-green-600" },
-    { name: "Fijaciones", icon: <Wrench size={28} />, path: "/categoria/fijaciones", color: "bg-purple-100 text-purple-600" },
-    { name: "Ofertas", icon: <ShoppingBag size={28} />, path: "/ofertas", color: "bg-red-100 text-red-600" },
+    { name: "Herramientas", icon: <Hammer size={28} />, path: "/productos?categoria=herramientas", color: "bg-orange-100 text-orange-600" },
+    { name: "Construcción", icon: <HardHat size={28} />, path: "/productos?categoria=construccion", color: "bg-yellow-100 text-yellow-600" },
+    { name: "Electricidad", icon: <Zap size={28} />, path: "/productos?categoria=electricidad", color: "bg-blue-100 text-blue-600" },
+    { name: "Plomería", icon: <Pipette size={28} />, path: "/productos?categoria=plomeria", color: "bg-cyan-100 text-cyan-600" },
+    { name: "Pintura", icon: <Paintbrush size={28} />, path: "/productos?categoria=pintura", color: "bg-pink-100 text-pink-600" },
+    { name: "Jardín", icon: <Trees size={28} />, path: "/productos?categoria=jardin", color: "bg-green-100 text-green-600" },
+    { name: "Fijaciones", icon: <Wrench size={28} />, path: "/productos?categoria=fijaciones", color: "bg-purple-100 text-purple-600" },
+    { name: "Ofertas", icon: <ShoppingBag size={28} />, path: "/productos", color: "bg-red-100 text-red-600" },
 ]
 
 const Categories = () => {

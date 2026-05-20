@@ -1,4 +1,4 @@
-import { createElement, useEffect, useMemo, useState } from "react"
+import { Fragment, createElement, useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, PackageCheck, RefreshCw, ShoppingBag, TrendingUp, Users } from "lucide-react"
 import api from "../../api/axios"
@@ -210,45 +210,57 @@ const OrdersTable = ({ orders, selectedOrder, updatingOrderId, onSelectOrder, on
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {orders.map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-50 transition">
-                            <td className="px-6 py-4 font-semibold text-gray-800">#{order.id}</td>
-                            <td className="px-6 py-4">
-                                <p className="font-semibold text-gray-800">{order.user_name}</p>
-                                <p className="text-xs text-gray-400">{order.user_email}</p>
-                            </td>
-                            <td className="px-6 py-4 font-semibold text-gray-800">{formatCurrency(order.total)}</td>
-                            <td className="px-6 py-4">
-                                <select
-                                    value={order.status}
-                                    disabled={updatingOrderId === order.id}
-                                    onChange={(event) => onStatusChange(order.id, event.target.value)}
-                                    className={`text-xs font-semibold px-3 py-1 rounded-full border-0 cursor-pointer ${statusColors[order.status] || "bg-gray-100 text-gray-600"}`}
-                                >
-                                    {Object.entries(statusLabels).map(([value, label]) => (
-                                        <option key={value} value={value}>{label}</option>
-                                    ))}
-                                </select>
-                            </td>
-                            <td className="px-6 py-4 text-gray-400 text-xs">
-                                {new Date(order.created_at).toLocaleDateString("es-CL")}
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                                <button
-                                    onClick={() => onSelectOrder(order)}
-                                    className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition"
-                                    title="Ver detalle"
-                                >
-                                    <Eye size={16} />
-                                </button>
-                            </td>
-                        </tr>
+                        <Fragment key={order.id}>
+                            <tr className="hover:bg-gray-50 transition">
+                                <td className="px-6 py-4 font-semibold text-gray-800">#{order.id}</td>
+                                <td className="px-6 py-4">
+                                    <p className="font-semibold text-gray-800">{order.user_name}</p>
+                                    <p className="text-xs text-gray-400">{order.user_email}</p>
+                                </td>
+                                <td className="px-6 py-4 font-semibold text-gray-800">{formatCurrency(order.total)}</td>
+                                <td className="px-6 py-4">
+                                    <select
+                                        value={order.status}
+                                        disabled={updatingOrderId === order.id}
+                                        onChange={(event) => onStatusChange(order.id, event.target.value)}
+                                        className={`text-xs font-semibold px-3 py-1 rounded-full border-0 cursor-pointer ${statusColors[order.status] || "bg-gray-100 text-gray-600"}`}
+                                    >
+                                        {Object.entries(statusLabels).map(([value, label]) => (
+                                            <option key={value} value={value}>{label}</option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td className="px-6 py-4 text-gray-400 text-xs">
+                                    {new Date(order.created_at).toLocaleDateString("es-CL")}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <button
+                                        onClick={() => onSelectOrder(order)}
+                                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition ${selectedOrder?.id === order.id
+                                            ? "bg-blue-500 text-white"
+                                            : "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                                            }`}
+                                        title="Ver detalle"
+                                    >
+                                        <Eye size={16} />
+                                        {selectedOrder?.id === order.id ? "Ocultar" : "Ver"}
+                                    </button>
+                                </td>
+                            </tr>
+                            {selectedOrder?.id === order.id && (
+                                <tr>
+                                    <td colSpan={6} className="p-0">
+                                        <OrderDetail order={order} />
+                                    </td>
+                                </tr>
+                            )}
+                        </Fragment>
                     ))}
                 </tbody>
             </table>
         </div>
 
         {orders.length === 0 && <EmptyState text="No hay pedidos registrados" />}
-        {selectedOrder && <OrderDetail order={selectedOrder} />}
     </div>
 )
 

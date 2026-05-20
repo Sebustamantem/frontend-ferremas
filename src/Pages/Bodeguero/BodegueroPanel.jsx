@@ -8,12 +8,20 @@ const statusColors = {
     paid: "bg-blue-100 text-blue-700",
     processing: "bg-purple-100 text-purple-700",
     shipped: "bg-orange-100 text-orange-700",
+    delivered: "bg-green-100 text-green-700",
 }
 
 const statusLabels = {
     paid: "Pagado",
     processing: "Procesando",
     shipped: "Enviado",
+    delivered: "Entregado",
+}
+
+const warehouseActions = {
+    paid: { nextStatus: "processing", label: "Preparar", confirm: "Marcar este pedido como en preparacion?" },
+    processing: { nextStatus: "shipped", label: "Despachar", confirm: "Marcar este pedido como enviado?" },
+    shipped: { nextStatus: "delivered", label: "Entregado", confirm: "Marcar este pedido como entregado al cliente?" },
 }
 
 const formatCurrency = (value) => `$${Number(value || 0).toLocaleString("es-CL")}`
@@ -29,7 +37,7 @@ const BodegueroPanel = () => {
     const [editingStockId, setEditingStockId] = useState(null)
     const [stockValue, setStockValue] = useState("")
     const [savingStockId, setSavingStockId] = useState(null)
-    const [dispatchingOrderId, setDispatchingOrderId] = useState(null)
+    const [updatingOrderId, setUpdatingOrderId] = useState(null)
 
     useEffect(() => {
         if (!user) return
@@ -86,30 +94,32 @@ const BodegueroPanel = () => {
         }
     }
 
-    const handleDispatch = async (orderId) => {
-        if (!confirm("Marcar este pedido como enviado?")) return
+    const handleWarehouseStatusChange = async (order) => {
+        const action = warehouseActions[order.status]
+        if (!action) return
+        if (!confirm(action.confirm)) return
 
-        setDispatchingOrderId(orderId)
+        setUpdatingOrderId(order.id)
         try {
-            await api.put(`/staff/warehouse/orders/${orderId}/dispatch`)
+            await api.put(`/staff/warehouse/orders/${order.id}/status`, { status: action.nextStatus })
             await fetchData()
         } catch (err) {
-            alert(err.response?.data?.message || "Error al despachar pedido")
+            alert(err.response?.data?.message || "Error al actualizar el pedido")
         } finally {
-            setDispatchingOrderId(null)
+            setUpdatingOrderId(null)
         }
     }
 
     const stats = useMemo(() => {
         const lowStock = inventory.filter((product) => Number(product.stock) > 0 && Number(product.stock) <= 5)
         const outOfStock = inventory.filter((product) => Number(product.stock) === 0)
-        const readyToDispatch = orders.filter((order) => order.status === "processing")
+        const inProgressOrders = orders.filter((order) => ["paid", "processing", "shipped"].includes(order.status))
 
         return {
             totalProducts: inventory.length,
             lowStock,
             outOfStock,
-            readyToDispatch,
+            inProgressOrders,
         }
     }, [inventory, orders])
 
@@ -134,7 +144,7 @@ const BodegueroPanel = () => {
                     <StatCard icon={Package} label="Productos" value={stats.totalProducts} color="orange" />
                     <StatCard icon={AlertTriangle} label="Stock bajo" value={stats.lowStock.length} color="yellow" />
                     <StatCard icon={X} label="Sin stock" value={stats.outOfStock.length} color="red" />
-                    <StatCard icon={Truck} label="Por despachar" value={stats.readyToDispatch.length} color="blue" />
+                    <StatCard icon={Truck} label="En gestion" value={stats.inProgressOrders.length} color="blue" />
                 </div>
 
                 {(stats.lowStock.length > 0 || stats.outOfStock.length > 0) && (
@@ -180,8 +190,8 @@ const BodegueroPanel = () => {
                 ) : (
                     <DispatchTable
                         orders={orders}
-                        dispatchingOrderId={dispatchingOrderId}
-                        onDispatch={handleDispatch}
+                        updatingOrderId={updatingOrderId}
+                        onStatusChange={handleWarehouseStatusChange}
                     />
                 )}
             </div>
@@ -328,7 +338,7 @@ const StockBadge = ({ stock }) => {
     )
 }
 
-const DispatchTable = ({ orders, dispatchingOrderId, onDispatch }) => (
+const DispatchTable = ({ orders, updatingOrderId, onStatusChange }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         {orders.length === 0 ? (
             <EmptyState text="No hay pedidos pendientes de despacho" />
@@ -372,22 +382,22 @@ const DispatchTable = ({ orders, dispatchingOrderId, onDispatch }) => (
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    {order.status === "processing" ? (
+                                    {warehouseActions[order.status] ? (
                                         <button
-                                            onClick={() => onDispatch(order.id)}
-                                            disabled={dispatchingOrderId === order.id}
+                                            onClick={() => onStatusChange(order)}
+                                            disabled={updatingOrderId === order.id}
                                             className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs px-4 py-2 rounded-lg font-semibold disabled:opacity-60 transition"
                                         >
                                             <Truck size={14} />
-                                            Despachar
+                                            {warehouseActions[order.status].label}
                                         </button>
-                                    ) : order.status === "shipped" ? (
+                                    ) : order.status === "delivered" ? (
                                         <span className="inline-flex items-center gap-1 text-xs text-green-600 font-semibold">
                                             <Check size={14} />
-                                            Despachado
+                                            Entregado
                                         </span>
                                     ) : (
-                                        <span className="text-xs text-gray-400">Esperando preparacion</span>
+                                        <span className="text-xs text-gray-400">Sin accion</span>
                                     )}
                                 </td>
                             </tr>

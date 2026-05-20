@@ -4,14 +4,14 @@ import {
 } from "lucide-react"
 
 const categories = [
-    { name: "Herramientas", icon: <Hammer size={18} />, path: "/categoria/herramientas" },
-    { name: "Construcción", icon: <HardHat size={18} />, path: "/categoria/construccion" },
-    { name: "Electricidad", icon: <Zap size={18} />, path: "/categoria/electricidad" },
-    { name: "Plomería", icon: <Pipette size={18} />, path: "/categoria/plomeria" },
-    { name: "Pintura", icon: <Paintbrush size={18} />, path: "/categoria/pintura" },
-    { name: "Jardín", icon: <Trees size={18} />, path: "/categoria/jardin" },
-    { name: "Fijaciones", icon: <Wrench size={18} />, path: "/categoria/fijaciones" },
-    { name: "Ofertas", icon: <ShoppingBag size={18} />, path: "/ofertas" },
+    { name: "Herramientas", icon: <Hammer size={18} />, path: "/productos?categoria=herramientas" },
+    { name: "Construcción", icon: <HardHat size={18} />, path: "/productos?categoria=construccion" },
+    { name: "Electricidad", icon: <Zap size={18} />, path: "/productos?categoria=electricidad" },
+    { name: "Plomería", icon: <Pipette size={18} />, path: "/productos?categoria=plomeria" },
+    { name: "Pintura", icon: <Paintbrush size={18} />, path: "/productos?categoria=pintura" },
+    { name: "Jardín", icon: <Trees size={18} />, path: "/productos?categoria=jardin" },
+    { name: "Fijaciones", icon: <Wrench size={18} />, path: "/productos?categoria=fijaciones" },
+    { name: "Ofertas", icon: <ShoppingBag size={18} />, path: "/productos" },
 ]
 
 const CategoryBar = () => {
