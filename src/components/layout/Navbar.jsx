@@ -175,10 +175,6 @@ const Navbar = () => {
                           className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
                           Regístrate
                         </Link>
-                        <Link to="/registro-pro" onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition border-t border-gray-100">
-                          🔨 Soy Maestro/PYME
-                        </Link>
                       </>
                     ) : (
                       <>
