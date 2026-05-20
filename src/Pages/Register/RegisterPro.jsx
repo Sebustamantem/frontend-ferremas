@@ -1,6 +1,7 @@
-import { useState } from "react"
-import { useNavigate, Link, useSearchParams } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { register as registerService } from "../../api/authService"
+import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
 import { Eye, EyeOff, User, Mail, Lock, Phone, CreditCard, Briefcase, Building } from "lucide-react"
 
@@ -14,8 +15,33 @@ const RegisterPro = () => {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
-    const { login } = useAuth()
+    const { user, login } = useAuth()
     const navigate = useNavigate()
+    const isUpgrade = Boolean(user && user.user_type === "cliente")
+    const title = isUpgrade ? "Actualiza tu cuenta a Maestro/PYME" : "Registro Profesional"
+    const subtitle = isUpgrade
+        ? "Convierte tu cuenta existente en Pro para acceder a FerreCredito y beneficios exclusivos"
+        : "Accede a FerreCredito y beneficios exclusivos"
+
+    useEffect(() => {
+        if (!user) return
+        if (user.user_type !== "cliente") {
+            navigate("/pro/bienvenida")
+            return
+        }
+
+        setUserType(searchParams.get("type") || "maestro")
+        setForm({
+            name: user.name || "",
+            lastname: user.lastname || "",
+            email: user.email || "",
+            password: "",
+            rut: user.rut || "",
+            phone: user.phone?.replace(/^\+56/, "") || "",
+            business_name: user.business_name || "",
+            profession: user.profession || ""
+        })
+    }, [user, searchParams, navigate])
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -54,20 +80,33 @@ const RegisterPro = () => {
             return
         }
 
-        const passwordError = validatePassword(form.password)
+        if (!user && !form.password) {
+            setError("La contraseña es obligatoria para crear una cuenta")
+            setLoading(false)
+            return
+        }
+
+        const passwordError = form.password ? validatePassword(form.password) : null
         if (passwordError) {
             setError(passwordError)
             setLoading(false)
             return
         }
 
+        const payload = {
+            ...form,
+            phone: `+56${form.phone}`,
+            user_type: userType,
+        }
+
         try {
-            const res = await registerService({
-                ...form,
-                phone: `+56${form.phone}`,
-                user_type: userType
-            })
-            login(res.data.user, res.data.token)
+            let res
+            if (user) {
+                res = await api.put("/users/me", payload)
+            } else {
+                res = await registerService(payload)
+            }
+            login(res.data.user, localStorage.getItem("token") || res.data.token)
             navigate("/pro/bienvenida")
         } catch (err) {
             setError(err.response?.data?.message || "Error al registrarse")
@@ -87,9 +126,9 @@ const RegisterPro = () => {
 
                 {/* Card */}
                 <div className="bg-white rounded-3xl shadow-2xl p-8">
-                    <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">Registro Profesional</h2>
+                    <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">{title}</h2>
                     <p className="text-center text-gray-400 text-sm mb-6">
-                        Accede a FerreCredito y beneficios exclusivos
+                        {subtitle}
                     </p>
 
                     {/* Selector tipo */}
@@ -98,8 +137,8 @@ const RegisterPro = () => {
                             type="button"
                             onClick={() => setUserType("maestro")}
                             className={`flex-1 py-3 rounded-xl font-semibold text-sm transition ${userType === "maestro"
-                                    ? "bg-gray-900 text-white"
-                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                ? "bg-gray-900 text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
                             🔨 Maestro
@@ -108,8 +147,8 @@ const RegisterPro = () => {
                             type="button"
                             onClick={() => setUserType("pyme")}
                             className={`flex-1 py-3 rounded-xl font-semibold text-sm transition ${userType === "pyme"
-                                    ? "bg-gray-900 text-white"
-                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                ? "bg-gray-900 text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
                             🏢 PYME
@@ -224,7 +263,7 @@ const RegisterPro = () => {
                                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input type={showPassword ? "text" : "password"} name="password"
                                     placeholder="Contraseña segura"
-                                    value={form.password} onChange={handleChange} required
+                                    value={form.password} onChange={handleChange} required={!user}
                                     className="w-full border border-gray-200 rounded-xl pl-9 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -236,22 +275,15 @@ const RegisterPro = () => {
 
                         <button type="submit" disabled={loading}
                             className="bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition disabled:opacity-60 mt-1">
-                            {loading ? "Registrando..." : `Registrarme como ${userType === "maestro" ? "Maestro" : "PYME"}`}
+                            {loading
+                                ? "Procesando..."
+                                : isUpgrade
+                                    ? "Actualizar cuenta"
+                                    : `Registrarme como ${userType === "maestro" ? "Maestro" : "PYME"}`
+                            }
                         </button>
                     </form>
 
-                    <p className="text-center text-sm mt-5 text-gray-500">
-                        ¿Ya tienes cuenta?{" "}
-                        <Link to="/login" className="font-semibold text-orange-500 hover:underline">
-                            Inicia sesión
-                        </Link>
-                    </p>
-                    <p className="text-center text-sm mt-2 text-gray-500">
-                        ¿Eres cliente normal?{" "}
-                        <Link to="/register" className="font-semibold text-gray-700 hover:underline">
-                            Regístrate aquí
-                        </Link>
-                    </p>
                 </div>
             </div>
         </div>
