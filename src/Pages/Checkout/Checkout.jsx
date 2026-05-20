@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { ShoppingCart, Trash2, CreditCard, ArrowLeft, Landmark } from "lucide-react"
 import api from "../../api/axios"
+import { regions } from "../../data/chileRegions"
 
 const Checkout = () => {
     const { cart, removeFromCart, total, clearCart } = useCart()
@@ -17,6 +18,16 @@ const Checkout = () => {
         region: "", city: "", street: "", number: "", zip: "", phone: ""
     })
 
+    const normalizePhone = (value) => {
+        const digits = value.replace(/\D/g, "")
+        if (!digits) return ""
+        if (digits.startsWith("569")) return `+${digits}`
+        if (digits.startsWith("56")) return `+${digits}`
+        if (digits.startsWith("9")) return `+56${digits}`
+        return `+569${digits}`
+    }
+
+    const selectedRegion = regions.find((region) => region.name === address.region)
     const isPro = ["maestro", "pyme"].includes(user?.user_type)
     const isAddressComplete = address.region && address.city && address.street && address.phone
     const shipping = total >= 50000 ? 0 : 4990
@@ -40,14 +51,26 @@ const Checkout = () => {
 
     useEffect(() => {
         if (!user) return
+        let userAddress = null
         if (user.address) {
-            setAddress((prev) => ({ ...prev, ...user.address }))
+            userAddress = typeof user.address === "object" ? user.address : JSON.parse(user.address)
+        }
+        if (userAddress) {
+            setAddress((prev) => ({
+                ...prev,
+                ...userAddress,
+                phone: normalizePhone(userAddress.phone || prev.phone),
+            }))
             return
         }
         api.get("/users/me")
             .then((res) => {
                 if (res.data.address) {
-                    setAddress((prev) => ({ ...prev, ...res.data.address }))
+                    setAddress((prev) => ({
+                        ...prev,
+                        ...res.data.address,
+                        phone: normalizePhone(res.data.address.phone || prev.phone),
+                    }))
                 }
             })
             .catch(() => { })
@@ -254,32 +277,25 @@ const Checkout = () => {
                                         <div className="flex flex-col gap-1">
                                             <label className="text-xs text-gray-500 font-medium">Región</label>
                                             <select value={address.region}
-                                                onChange={(e) => setAddress({ ...address, region: e.target.value })}
+                                                onChange={(e) => setAddress({ ...address, region: e.target.value, city: "" })}
                                                 className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50">
                                                 <option value="">Selecciona región</option>
-                                                <option>Región Metropolitana</option>
-                                                <option>Valparaíso</option>
-                                                <option>Biobío</option>
-                                                <option>La Araucanía</option>
-                                                <option>Los Lagos</option>
-                                                <option>Maule</option>
-                                                <option>O'Higgins</option>
-                                                <option>Coquimbo</option>
-                                                <option>Atacama</option>
-                                                <option>Antofagasta</option>
-                                                <option>Tarapacá</option>
-                                                <option>Arica y Parinacota</option>
-                                                <option>Los Ríos</option>
-                                                <option>Aysén</option>
-                                                <option>Magallanes</option>
+                                                {regions.map((region) => (
+                                                    <option key={region.name} value={region.name}>{region.name}</option>
+                                                ))}
                                             </select>
                                         </div>
                                         <div className="flex flex-col gap-1">
-                                            <label className="text-xs text-gray-500 font-medium">Ciudad</label>
-                                            <input type="text" placeholder="Ej: Santiago"
-                                                value={address.city}
+                                            <label className="text-xs text-gray-500 font-medium">Comuna</label>
+                                            <select value={address.city}
                                                 onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                                                className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
+                                                disabled={!selectedRegion}
+                                                className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100">
+                                                <option value="">Selecciona comuna</option>
+                                                {selectedRegion?.communes.map((commune) => (
+                                                    <option key={commune} value={commune}>{commune}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
 
@@ -310,9 +326,9 @@ const Checkout = () => {
 
                                     <div className="flex flex-col gap-1">
                                         <label className="text-xs text-gray-500 font-medium">Teléfono de contacto</label>
-                                        <input type="tel" placeholder="Ej: +56 9 1234 5678"
+                                        <input type="tel" placeholder="+569 1234 5678"
                                             value={address.phone}
-                                            onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+                                            onChange={(e) => setAddress({ ...address, phone: normalizePhone(e.target.value) })}
                                             className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
                                     </div>
                                 </div>

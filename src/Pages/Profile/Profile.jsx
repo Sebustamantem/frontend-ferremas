@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "../../context/AuthContext"
 import api from "../../api/axios"
+import { regions } from "../../data/chileRegions"
 
 const Profile = () => {
     const { user, login } = useAuth()
@@ -20,6 +21,17 @@ const Profile = () => {
         },
     })
     const [loading, setLoading] = useState(true)
+
+    const normalizePhone = (value) => {
+        const digits = value.replace(/\D/g, "")
+        if (!digits) return ""
+        if (digits.startsWith("569")) return `+${digits}`
+        if (digits.startsWith("56")) return `+${digits}`
+        if (digits.startsWith("9")) return `+56${digits}`
+        return `+569${digits}`
+    }
+
+    const selectedRegion = regions.find((region) => region.name === form.address.region)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState("")
     const [error, setError] = useState("")
@@ -28,19 +40,22 @@ const Profile = () => {
         const fetchProfile = async () => {
             try {
                 const res = await api.get("/users/me")
+                const addressData = res.data.address && typeof res.data.address === "object"
+                    ? res.data.address
+                    : res.data.address ? JSON.parse(res.data.address) : null
                 setForm({
                     name: res.data.name || "",
                     lastname: res.data.lastname || "",
                     email: res.data.email || "",
-                    phone: res.data.phone || "",
+                    phone: normalizePhone(res.data.phone || ""),
                     password: "",
-                    address: res.data.address || {
-                        region: "",
-                        city: "",
-                        street: "",
-                        number: "",
-                        zip: "",
-                        phone: "",
+                    address: {
+                        region: addressData?.region || "",
+                        city: addressData?.city || "",
+                        street: addressData?.street || "",
+                        number: addressData?.number || "",
+                        zip: addressData?.zip || "",
+                        phone: normalizePhone(addressData?.phone || ""),
                     },
                 })
             } catch (err) {
@@ -159,8 +174,9 @@ const Profile = () => {
                             <span className="text-sm text-gray-600">Teléfono</span>
                             <input
                                 type="text"
+                                placeholder="+569 1234 5678"
                                 value={form.phone}
-                                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                                onChange={(e) => setForm({ ...form, phone: normalizePhone(e.target.value) })}
                                 className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
                             />
                         </label>
@@ -171,21 +187,30 @@ const Profile = () => {
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <label className="block">
                                 <span className="text-sm text-gray-600">Región</span>
-                                <input
-                                    type="text"
+                                <select
                                     value={form.address.region}
-                                    onChange={(e) => setForm({ ...form, address: { ...form.address, region: e.target.value } })}
+                                    onChange={(e) => setForm({ ...form, address: { ...form.address, region: e.target.value, city: "" } })}
                                     className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                                />
+                                >
+                                    <option value="">Selecciona región</option>
+                                    {regions.map((region) => (
+                                        <option key={region.name} value={region.name}>{region.name}</option>
+                                    ))}
+                                </select>
                             </label>
                             <label className="block">
-                                <span className="text-sm text-gray-600">Ciudad</span>
-                                <input
-                                    type="text"
+                                <span className="text-sm text-gray-600">Comuna</span>
+                                <select
                                     value={form.address.city}
                                     onChange={(e) => setForm({ ...form, address: { ...form.address, city: e.target.value } })}
-                                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                                />
+                                    disabled={!selectedRegion}
+                                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+                                >
+                                    <option value="">Selecciona comuna</option>
+                                    {selectedRegion?.communes.map((commune) => (
+                                        <option key={commune} value={commune}>{commune}</option>
+                                    ))}
+                                </select>
                             </label>
                         </div>
                         <label className="block mt-4">
