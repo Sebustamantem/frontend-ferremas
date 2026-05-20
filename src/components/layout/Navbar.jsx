@@ -164,7 +164,7 @@ const Navbar = () => {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 top-12 bg-white rounded-2xl shadow-xl w-52 py-2 z-50 border border-gray-100">
+                  <div className="absolute right-0 top-12 bg-white rounded-2xl shadow-xl w-56 py-2 z-50 border border-gray-100">
                     {!user ? (
                       <>
                         <Link to="/login" onClick={() => setIsUserMenuOpen(false)}
@@ -175,14 +175,24 @@ const Navbar = () => {
                           className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
                           Regístrate
                         </Link>
+                        <Link to="/registro-pro" onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition border-t border-gray-100">
+                          🔨 Soy Maestro/PYME
+                        </Link>
                       </>
                     ) : (
                       <>
                         <div className="px-5 py-3 border-b border-gray-100">
                           <p className="text-xs text-gray-400">Hola,</p>
                           <p className="text-sm font-bold text-gray-800 truncate">{user.name}</p>
+                          {["maestro", "pyme"].includes(user.user_type) && (
+                            <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">
+                              {user.user_type === "maestro" ? "🔨 Maestro" : "🏢 PYME"}
+                            </span>
+                          )}
                         </div>
 
+                        {/* Links Admin */}
                         {user.role === "admin" && (
                           <>
                             <Link to="/admin/products" onClick={() => setIsUserMenuOpen(false)}
@@ -190,16 +200,34 @@ const Navbar = () => {
                               ⚙️ Productos
                             </Link>
                             <Link to="/admin/users" onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-b border-gray-100">
+                              className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition">
                               👥 Usuarios
+                            </Link>
+                            <Link to="/admin/credits" onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-b border-gray-100">
+                              💳 FerreCredito
                             </Link>
                           </>
                         )}
 
+                        {/* Links Maestro/PYME */}
+                        {["maestro", "pyme"].includes(user.user_type) && (
+                          <Link to="/mi-credito" onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
+                            💳 Mi FerreCredito
+                          </Link>
+                        )}
+
+                        <Link to="/mis-pedidos" onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
+                          📦 Mis pedidos
+                        </Link>
+
                         <Link to="/perfil" onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
-                          Mi cuenta
+                          👤 Mi cuenta
                         </Link>
+
                         <button onClick={handleLogout}
                           className="w-full text-left px-5 py-3 text-sm text-red-500 hover:bg-red-50 transition">
                           Cerrar sesión
