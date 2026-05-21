@@ -39,25 +39,49 @@ const RoleRoute = ({ children, roles }) => {
   return children
 }
 
+const getRoleHomePath = (role) => {
+  if (role === "admin") return "/admin/products"
+  if (role === "vendedor") return "/vendedor"
+  if (role === "bodeguero") return "/bodeguero"
+  return null
+}
+
+const HomeRoute = () => {
+  const { user } = useAuth()
+  const roleHomePath = getRoleHomePath(user?.role)
+  return roleHomePath ? <Navigate to={roleHomePath} /> : <Home />
+}
+
+const CustomerRoute = ({ children, requireAuth = false }) => {
+  const { user } = useAuth()
+  const roleHomePath = getRoleHomePath(user?.role)
+  if (roleHomePath) return <Navigate to={roleHomePath} />
+  if (requireAuth && !user) return <Navigate to="/login" />
+  return children
+}
+
 function AppContent() {
+  const { user } = useAuth()
+  const isStaff = ["admin", "vendedor", "bodeguero"].includes(user?.role)
+
   return (
     <div>
       <Navbar />
-      <main className="pt-44 md:pt-48">
+      <main className={isStaff ? "pt-24" : "pt-44 md:pt-48"}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<HomeRoute />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/registro-pro" element={<RegisterPro />} />
           <Route path="/pro/bienvenida" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
-          <Route path="/mi-credito" element={<ProtectedRoute><MyCredit /></ProtectedRoute>} />
-          <Route path="/productos" element={<Products />} />
-          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/mi-credito" element={<CustomerRoute requireAuth><MyCredit /></CustomerRoute>} />
+          <Route path="/productos" element={<CustomerRoute><Products /></CustomerRoute>} />
+          <Route path="/checkout" element={<CustomerRoute requireAuth><Checkout /></CustomerRoute>} />
           <Route path="/checkout/success" element={<Success />} />
           <Route path="/checkout/failure" element={<Failure />} />
           <Route path="/checkout/pending" element={<Pending />} />
-          <Route path="/mis-pedidos" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
-          <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/mis-pedidos" element={<CustomerRoute requireAuth><OrderHistory /></CustomerRoute>} />
+          <Route path="/perfil" element={<CustomerRoute requireAuth><Profile /></CustomerRoute>} />
           <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/credits" element={<AdminRoute><AdminCredits /></AdminRoute>} />

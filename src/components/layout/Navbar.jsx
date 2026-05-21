@@ -15,6 +15,14 @@ const Navbar = () => {
   const { itemCount } = useCart()
   const navigate = useNavigate()
   const menuRef = useRef(null)
+  const isStaff = ["admin", "vendedor", "bodeguero"].includes(user?.role)
+  const roleHomePath = user?.role === "admin"
+    ? "/admin/products"
+    : user?.role === "vendedor"
+      ? "/vendedor"
+      : user?.role === "bodeguero"
+        ? "/bodeguero"
+        : "/"
 
   useEffect(() => {
     const fetchIndicators = async () => {
@@ -57,6 +65,8 @@ const Navbar = () => {
     <div className="fixed top-0 left-0 w-full z-50">
 
       {/* Barra indicadores económicos */}
+      {!isStaff && (
+        <>
       <div className="bg-gray-900 text-white text-xs py-1.5 px-4 overflow-x-auto">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-6 whitespace-nowrap">
           <div className="flex items-center gap-6">
@@ -88,6 +98,8 @@ const Navbar = () => {
         🚚 Despacho gratis en compras sobre $50.000 —{" "}
         <span className="font-bold text-orange-400">¡Aprovecha ahora!</span>
       </div>
+        </>
+      )}
 
       {/* Navbar principal */}
       <header className="bg-orange-600 shadow-md">
@@ -95,7 +107,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-20 relative">
 
             {/* Modo Búsqueda Móvil */}
-            {isSearchOpen && (
+            {!isStaff && isSearchOpen && (
               <div className="absolute inset-0 z-50 bg-orange-600 flex items-center px-4 sm:hidden">
                 <div className="flex-1 flex items-center bg-white rounded-full overflow-hidden h-11 shadow-sm">
                   <input type="text" autoFocus placeholder="Buscar Producto..."
@@ -112,17 +124,17 @@ const Navbar = () => {
 
             {/* Lado Izquierdo */}
             <div className="flex items-center gap-3">
-              <button className="sm:hidden text-white cursor-pointer hover:bg-orange-700 p-1 rounded-md transition">
+              <button className={`${isStaff ? "hidden" : "sm:hidden"} text-white cursor-pointer hover:bg-orange-700 p-1 rounded-md transition`}>
                 <Menu size={28} />
               </button>
-              <Link to="/">
+              <Link to={roleHomePath}>
                 <img src="/images/Logo.png" alt="Ferremas"
                   className="h-10 sm:h-12 object-contain hover:scale-105 transition" />
               </Link>
             </div>
 
             {/* Centro - Buscador */}
-            <div className="hidden sm:flex flex-1 max-w-2xl mx-6 bg-white rounded-full overflow-hidden h-11 shadow-sm">
+            <div className={`${isStaff ? "hidden" : "hidden sm:flex"} flex-1 max-w-2xl mx-6 bg-white rounded-full overflow-hidden h-11 shadow-sm`}>
               <input type="text" placeholder="Buscar Productos..."
                 className="flex-1 px-5 text-sm outline-none text-gray-700" />
               <button className="px-5 bg-black text-white transition-colors cursor-pointer">
@@ -132,14 +144,14 @@ const Navbar = () => {
 
             {/* Lado Derecho */}
             <div className="flex items-center gap-3">
-              <button onClick={() => SetIsSearchOpen(true)}
+              {!isStaff && <button onClick={() => SetIsSearchOpen(true)}
                 className="sm:hidden text-white cursor-pointer hover:opacity-80 transition p-1">
                 <Search size={24} />
-              </button>
+              </button>}
 
-              <button className="hidden sm:block text-white cursor-pointer hover:scale-110 transition p-1">
+              {!isStaff && <button className="hidden sm:block text-white cursor-pointer hover:scale-110 transition p-1">
                 <Heart size={24} />
-              </button>
+              </button>}
 
               {/* Dropdown Usuario */}
               <div className="relative" ref={menuRef}>
@@ -259,24 +271,24 @@ const Navbar = () => {
               </div>
 
               {/* Carrito */}
-              <button
+              {!isStaff && <button
                 onClick={() => setIsCartOpen(true)}
                 className="relative text-white cursor-pointer hover:scale-110 transition p-1">
                 <ShoppingCart size={24} />
                 <span className="absolute top-0 right-0 bg-white text-orange-600 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-orange-600">
                   {itemCount}
                 </span>
-              </button>
+              </button>}
             </div>
           </div>
         </div>
       </header>
 
       {/* Barra de categorías */}
-      <CategoryBar />
+      {!isStaff && <CategoryBar />}
 
       {/* Cart Drawer */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      {!isStaff && <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />}
     </div>
   )
 }
