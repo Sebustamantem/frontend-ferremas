@@ -39,7 +39,8 @@ const AdminUsers = () => {
         admin: "bg-orange-100 text-orange-600",
         cliente: "bg-blue-100 text-blue-600",
         vendedor: "bg-purple-100 text-purple-600",
-        bodeguero: "bg-green-100 text-green-600"
+        bodeguero: "bg-green-100 text-green-600",
+        contador: "bg-yellow-100 text-yellow-700"
     }
 
     return (
@@ -102,6 +103,7 @@ const AdminUsers = () => {
                                                 <option value="cliente">cliente</option>
                                                 <option value="vendedor">vendedor</option>
                                                 <option value="bodeguero">bodeguero</option>
+                                                <option value="contador">contador</option>
                                             </select>
                                         </td>
                                         <td className="px-6 py-4 text-gray-400 text-xs">

@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext"
 
 const statusColors = {
     pending: "bg-yellow-100 text-yellow-700",
+    transfer_pending: "bg-amber-100 text-amber-700",
     paid: "bg-blue-100 text-blue-700",
     processing: "bg-purple-100 text-purple-700",
     shipped: "bg-orange-100 text-orange-700",
@@ -15,6 +16,7 @@ const statusColors = {
 
 const statusLabels = {
     pending: "Pendiente",
+    transfer_pending: "Transferencia pendiente",
     paid: "Pagado",
     processing: "Procesando",
     shipped: "Enviado",
@@ -86,7 +88,7 @@ const VendedorPanel = () => {
     const stats = useMemo(() => {
         const validOrders = orders.filter((order) => order.status !== "cancelled")
         const totalSales = validOrders.reduce((acc, order) => acc + Number(order.total || 0), 0)
-        const pendingOrders = orders.filter((order) => ["pending", "paid"].includes(order.status)).length
+        const pendingOrders = orders.filter((order) => ["pending", "transfer_pending", "paid"].includes(order.status)).length
 
         return {
             totalOrders: orders.length,

@@ -8,6 +8,8 @@ const Success = () => {
     const [order, setOrder] = useState(null)
     const navigate = useNavigate()
     const orderId = searchParams.get("order_id")
+    const method = searchParams.get("method")
+    const isTransfer = method === "transferencia"
 
     useEffect(() => {
         if (orderId) {
@@ -23,8 +25,14 @@ const Success = () => {
                 <div className="flex justify-center mb-6">
                     <CheckCircle size={64} className="text-green-500" />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">¡Pago exitoso!</h1>
-                <p className="text-gray-400 text-sm mb-6">Tu pedido ha sido confirmado y está siendo procesado.</p>
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                    {isTransfer ? "Pedido creado" : "Pago exitoso"}
+                </h1>
+                <p className="text-gray-400 text-sm mb-6">
+                    {isTransfer
+                        ? "Tu transferencia quedo pendiente de confirmacion por contador."
+                        : "Tu pedido ha sido confirmado y esta siendo procesado."}
+                </p>
 
                 {order && (
                     <div className="bg-gray-50 rounded-2xl p-4 mb-6 text-left">
@@ -43,12 +51,16 @@ const Success = () => {
                 )}
 
                 <div className="flex flex-col gap-3">
-                    <button onClick={() => navigate("/productos")}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-semibold transition">
+                    <button
+                        onClick={() => navigate("/productos")}
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-semibold transition"
+                    >
                         Seguir comprando
                     </button>
-                    <button onClick={() => navigate("/mis-pedidos")}
-                        className="w-full border border-gray-200 text-gray-600 hover:bg-gray-50 py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2">
+                    <button
+                        onClick={() => navigate("/mis-pedidos")}
+                        className="w-full border border-gray-200 text-gray-600 hover:bg-gray-50 py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2"
+                    >
                         <ShoppingBag size={18} />
                         Ver mis pedidos
                     </button>

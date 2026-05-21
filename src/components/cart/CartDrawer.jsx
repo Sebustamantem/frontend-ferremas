@@ -48,10 +48,10 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
             )}
 
-            <div className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white z-50 shadow-2xl transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+            <div className={`fixed inset-y-0 right-0 h-[100dvh] w-full sm:w-[420px] bg-white z-50 shadow-2xl transform transition-transform duration-300 flex flex-col ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b">
+                <div className="flex items-center justify-between p-4 sm:p-6 border-b shrink-0">
                     <div className="flex items-center gap-2">
                         <ShoppingCart size={22} className="text-orange-500" />
                         <h2 className="text-lg font-bold text-gray-800">Mi Carrito</h2>
@@ -75,7 +75,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Items */}
-                <div className="overflow-y-auto p-6 h-[calc(100vh-200px)]">
+                <div className="overflow-y-auto p-4 sm:p-6 flex-1 min-h-0">
                     {!user ? (
                         <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
                             <ShoppingCart size={48} className="text-gray-200" />
@@ -101,7 +101,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                             </div>
 
                             {cart.map((item) => (
-                                <div key={item.id} className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4">
+                                <div key={item.id} className="flex items-center gap-3 bg-gray-50 rounded-2xl p-3 sm:p-4">
                                     {item.image_url ? (
                                         <img src={item.image_url} alt={item.name}
                                             className="w-14 h-14 object-contain bg-white rounded-xl border border-gray-200 p-1 shrink-0" />
@@ -146,7 +146,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
                 {/* Footer */}
                 {user && cart.length > 0 && (
-                    <div className="border-t p-6 bg-white">
+                    <div className="border-t p-4 sm:p-6 bg-white shrink-0">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-gray-600 font-medium">Total</span>
                             <span className="text-2xl font-bold text-gray-800">

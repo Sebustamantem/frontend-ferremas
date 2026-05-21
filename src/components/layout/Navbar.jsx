@@ -15,14 +15,16 @@ const Navbar = () => {
   const { itemCount } = useCart()
   const navigate = useNavigate()
   const menuRef = useRef(null)
-  const isStaff = ["admin", "vendedor", "bodeguero"].includes(user?.role)
+  const isStaff = ["admin", "vendedor", "bodeguero", "contador"].includes(user?.role)
   const roleHomePath = user?.role === "admin"
     ? "/admin/products"
     : user?.role === "vendedor"
       ? "/vendedor"
       : user?.role === "bodeguero"
         ? "/bodeguero"
-        : "/"
+        : user?.role === "contador"
+          ? "/contador"
+          : "/"
 
   useEffect(() => {
     const fetchIndicators = async () => {
@@ -67,7 +69,7 @@ const Navbar = () => {
       {/* Barra indicadores económicos */}
       {!isStaff && (
         <>
-      <div className="bg-gray-900 text-white text-xs py-1.5 px-4 overflow-x-auto">
+      <div className="hidden sm:block bg-gray-900 text-white text-xs py-1.5 px-4 overflow-x-auto">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-6 whitespace-nowrap">
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1">
@@ -94,7 +96,7 @@ const Navbar = () => {
       </div>
 
       {/* Barra de anuncio */}
-      <div className="bg-black text-white text-xs text-center py-2 px-4">
+      <div className="bg-black text-white text-[11px] sm:text-xs text-center py-1.5 sm:py-2 px-3 sm:px-4">
         🚚 Despacho gratis en compras sobre $50.000 —{" "}
         <span className="font-bold text-orange-400">¡Aprovecha ahora!</span>
       </div>
@@ -104,7 +106,7 @@ const Navbar = () => {
       {/* Navbar principal */}
       <header className="bg-orange-600 shadow-md">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 relative">
+          <div className="flex items-center justify-between h-16 sm:h-20 relative">
 
             {/* Modo Búsqueda Móvil */}
             {!isStaff && isSearchOpen && (
@@ -129,7 +131,7 @@ const Navbar = () => {
               </button>
               <Link to={roleHomePath}>
                 <img src="/images/Logo.png" alt="Ferremas"
-                  className="h-10 sm:h-12 object-contain hover:scale-105 transition" />
+                  className="h-8 sm:h-12 object-contain hover:scale-105 transition" />
               </Link>
             </div>
 
@@ -176,7 +178,7 @@ const Navbar = () => {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 top-12 bg-white rounded-2xl shadow-xl w-56 py-2 z-50 border border-gray-100">
+                  <div className="absolute right-0 top-11 sm:top-12 bg-white rounded-2xl shadow-xl w-[min(14rem,calc(100vw-1.5rem))] py-2 z-50 border border-gray-100">
                     {!user ? (
                       <>
                         <Link to="/login" onClick={() => setIsUserMenuOpen(false)}
@@ -257,6 +259,13 @@ const Navbar = () => {
                             <Link to="/bodeguero" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-green-600 hover:bg-green-50 transition border-b border-gray-100">
                               📦 Panel Bodeguero
+                            </Link>
+                          )}
+
+                          {user.role === "contador" && (
+                            <Link to="/contador" onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center px-5 py-3 text-sm font-semibold text-yellow-700 hover:bg-yellow-50 transition border-b border-gray-100">
+                              Panel Contador
                             </Link>
                           )}
 

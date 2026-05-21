@@ -14,6 +14,16 @@ const formatDate = (value) => {
 
 const formatPrice = (value) => `$${Number(value || 0).toLocaleString("es-CL")}`
 
+const statusLabels = {
+    pending: "Pendiente",
+    transfer_pending: "Transferencia pendiente",
+    paid: "Pagado",
+    processing: "En preparacion",
+    shipped: "Despachado",
+    delivered: "Entregado",
+    cancelled: "Cancelado",
+}
+
 const OrderHistory = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
@@ -96,7 +106,7 @@ const OrderHistory = () => {
                                 <div className="flex items-center gap-6">
                                     <div>
                                         <p className="text-xs text-gray-400">Estado</p>
-                                        <p className="text-sm font-semibold text-gray-700 capitalize">{order.status || "procesando"}</p>
+                                        <p className="text-sm font-semibold text-gray-700">{statusLabels[order.status] || order.status || "Procesando"}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-400">Total</p>

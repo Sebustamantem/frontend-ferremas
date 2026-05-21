@@ -8,6 +8,7 @@ import AdminUsers from "./Pages/Admin/AdminUsers"
 import AdminCredits from "./Pages/Admin/AdminCredits"
 import VendedorPanel from "./Pages/Vendedor/VendedorPanel"
 import BodegueroPanel from "./Pages/Bodeguero/BodegueroPanel"
+import ContadorPanel from "./Pages/Contador/ContadorPanel"
 import Products from "./Pages/Products/Products"
 import Checkout from "./Pages/Checkout/Checkout"
 import Success from "./Pages/Checkout/Success"
@@ -43,6 +44,7 @@ const getRoleHomePath = (role) => {
   if (role === "admin") return "/admin/products"
   if (role === "vendedor") return "/vendedor"
   if (role === "bodeguero") return "/bodeguero"
+  if (role === "contador") return "/contador"
   return null
 }
 
@@ -62,12 +64,12 @@ const CustomerRoute = ({ children, requireAuth = false }) => {
 
 function AppContent() {
   const { user } = useAuth()
-  const isStaff = ["admin", "vendedor", "bodeguero"].includes(user?.role)
+  const isStaff = ["admin", "vendedor", "bodeguero", "contador"].includes(user?.role)
 
   return (
     <div>
       <Navbar />
-      <main className={isStaff ? "pt-24" : "pt-44 md:pt-48"}>
+      <main className={isStaff ? "pt-20 sm:pt-24" : "pt-32 sm:pt-44 md:pt-48"}>
         <Routes>
           <Route path="/" element={<HomeRoute />} />
           <Route path="/login" element={<Login />} />
@@ -87,6 +89,7 @@ function AppContent() {
           <Route path="/admin/credits" element={<AdminRoute><AdminCredits /></AdminRoute>} />
           <Route path="/vendedor" element={<RoleRoute roles={["admin", "vendedor"]}><VendedorPanel /></RoleRoute>} />
           <Route path="/bodeguero" element={<RoleRoute roles={["admin", "bodeguero"]}><BodegueroPanel /></RoleRoute>} />
+          <Route path="/contador" element={<RoleRoute roles={["admin", "contador"]}><ContadorPanel /></RoleRoute>} />
         </Routes>
       </main>
     </div>

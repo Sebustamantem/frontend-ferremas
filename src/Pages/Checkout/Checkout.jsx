@@ -101,6 +101,10 @@ const Checkout = () => {
                 form.appendChild(input)
                 document.body.appendChild(form)
                 form.submit()
+            } else if (payMethod === "transferencia") {
+                const res = await api.post("/payment/transfer", { address })
+                await clearCart()
+                navigate(`/checkout/success?order_id=${res.data.order_id}&method=transferencia`)
             } else {
                 const res = await api.post("/ferre-credit/pay", { installments, address })
                 await clearCart()
@@ -202,6 +206,20 @@ const Checkout = () => {
                                         <div>
                                             <p className="font-semibold text-gray-800 text-sm">Transbank Webpay</p>
                                             <p className="text-xs text-gray-400">Pago con tarjeta de crédito o débito</p>
+                                        </div>
+                                    </label>
+
+                                    {/* Transferencia bancaria */}
+                                    <label className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition ${payMethod === "transferencia" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                                        }`}>
+                                        <input type="radio" name="payMethod" value="transferencia"
+                                            checked={payMethod === "transferencia"}
+                                            onChange={() => setPayMethod("transferencia")}
+                                            className="accent-blue-500" />
+                                        <Landmark size={22} className="text-blue-600" />
+                                        <div>
+                                            <p className="font-semibold text-gray-800 text-sm">Transferencia bancaria</p>
+                                            <p className="text-xs text-gray-400">El contador confirma el pago antes de enviar a bodega</p>
                                         </div>
                                     </label>
 
@@ -405,7 +423,13 @@ const Checkout = () => {
                                     className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white py-4 rounded-xl font-bold text-lg transition shadow-md flex items-center justify-center gap-2"
                                 >
                                     {payMethod === "transbank" ? <CreditCard size={20} /> : <Landmark size={20} />}
-                                    {payLoading ? "Procesando..." : payMethod === "transbank" ? "Pagar con Transbank" : "Pagar con FerreCredito"}
+                                    {payLoading
+                                        ? "Procesando..."
+                                        : payMethod === "transbank"
+                                            ? "Pagar con Transbank"
+                                            : payMethod === "transferencia"
+                                                ? "Crear pedido por transferencia"
+                                                : "Pagar con FerreCredito"}
                                 </button>
 
                                 {!isAddressComplete && (
