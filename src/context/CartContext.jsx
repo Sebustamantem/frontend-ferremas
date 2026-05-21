@@ -68,9 +68,13 @@ export const CartProvider = ({ children }) => {
 
     const total = cart.reduce((acc, item) => acc + Number(item.price) * item.quantity, 0)
     const itemCount = cart.reduce((acc, item) => acc + item.quantity, 0)
+    const reservationExpiresAt = cart
+        .map((item) => item.reservation_expires_at)
+        .filter(Boolean)
+        .sort()[0] || null
 
     return (
-        <CartContext.Provider value={{ cart, loading, addToCart, updateQuantity, removeFromCart, clearCart, total, itemCount, fetchCart }}>
+        <CartContext.Provider value={{ cart, loading, addToCart, updateQuantity, removeFromCart, clearCart, total, itemCount, reservationExpiresAt, fetchCart }}>
             {children}
         </CartContext.Provider>
     )

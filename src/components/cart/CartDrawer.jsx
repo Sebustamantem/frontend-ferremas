@@ -1,12 +1,35 @@
 import { X, Trash2, ShoppingCart, Plus, Minus } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useCart } from "../../context/CartContext"
 import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 
 const CartDrawer = ({ isOpen, onClose }) => {
-    const { cart, removeFromCart, clearCart, updateQuantity, total, itemCount } = useCart()
+    const { cart, removeFromCart, clearCart, updateQuantity, total, itemCount, reservationExpiresAt, fetchCart } = useCart()
     const { user } = useAuth()
     const navigate = useNavigate()
+    const [remainingSeconds, setRemainingSeconds] = useState(null)
+
+    useEffect(() => {
+        if (!reservationExpiresAt) {
+            setRemainingSeconds(null)
+            return
+        }
+
+        const updateRemaining = () => {
+            const seconds = Math.max(Math.ceil((new Date(reservationExpiresAt).getTime() - Date.now()) / 1000), 0)
+            setRemainingSeconds(seconds)
+            if (seconds === 0) fetchCart()
+        }
+
+        updateRemaining()
+        const interval = setInterval(updateRemaining, 1000)
+        return () => clearInterval(interval)
+    }, [reservationExpiresAt, fetchCart])
+
+    const reservationTime = remainingSeconds !== null
+        ? `${Math.floor(remainingSeconds / 60)}:${String(remainingSeconds % 60).padStart(2, "0")}`
+        : "10:00"
 
     const handleCheckout = () => {
         onClose()
@@ -74,7 +97,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     ) : (
                         <div className="flex flex-col gap-4">
                             <div className="bg-orange-50 border border-orange-200 text-orange-700 text-xs p-3 rounded-xl text-center">
-                                Tu carrito se reserva por <strong>10 minutos</strong>. ¡Completa tu compra antes de que expire!
+                                Tu carrito esta reservado por <strong>{reservationTime}</strong>. Completa tu compra antes de que expire.
                             </div>
 
                             {cart.map((item) => (
