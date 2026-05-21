@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
-import { CreditCard, X, Check, AlertCircle } from "lucide-react"
+import { CreditCard, X, Check } from "lucide-react"
 import api from "../../api/axios"
 
 const AdminCredits = () => {
@@ -15,6 +15,7 @@ const AdminCredits = () => {
     const [selectedUser, setSelectedUser] = useState(null)
     const [form, setForm] = useState({ credit_limit: "", is_active: true })
     const [activeTab, setActiveTab] = useState("credits")
+    const [error, setError] = useState("")
 
     useEffect(() => {
         if (!user || user.role !== "admin") { navigate("/"); return }
@@ -22,6 +23,7 @@ const AdminCredits = () => {
     }, [user])
 
     const fetchData = async () => {
+        setError("")
         try {
             const [usersRes, creditsRes] = await Promise.all([
                 api.get("/users"),
@@ -30,7 +32,7 @@ const AdminCredits = () => {
             setUsers(usersRes.data.filter(u => ["maestro", "pyme"].includes(u.user_type)))
             setCredits(creditsRes.data)
         } catch (err) {
-            console.error(err)
+            setError(err.response?.data?.message || "Error al cargar FerreCredito")
         } finally {
             setLoading(false)
         }
@@ -41,7 +43,7 @@ const AdminCredits = () => {
             const res = await api.get("/ferre-credit/all-installments")
             setInstallments(res.data)
         } catch (err) {
-            console.error(err)
+            setError(err.response?.data?.message || "Error al cargar cuotas")
         }
     }
 
@@ -67,7 +69,7 @@ const AdminCredits = () => {
             setShowModal(false)
             fetchData()
         } catch (err) {
-            console.error(err)
+            alert(err.response?.data?.message || "Error al guardar FerreCredito")
         }
     }
 
@@ -103,6 +105,12 @@ const AdminCredits = () => {
                         ← Volver
                     </button>
                 </div>
+
+                {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-6">
+                        {error}
+                    </div>
+                )}
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-6">

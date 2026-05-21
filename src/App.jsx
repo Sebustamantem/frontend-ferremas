@@ -14,6 +14,7 @@ import Success from "./Pages/Checkout/Success"
 import Failure from "./Pages/Checkout/Failure"
 import Pending from "./Pages/Checkout/Pending"
 import Welcome from "./Pages/Pro/Welcome"
+import MyCredit from "./Pages/Pro/MyCredit"
 import OrderHistory from "./Pages/Orders/OrderHistory"
 import Profile from "./Pages/Profile/Profile"
 import Navbar from "./components/layout/Navbar"
@@ -49,6 +50,7 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/registro-pro" element={<RegisterPro />} />
           <Route path="/pro/bienvenida" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
+          <Route path="/mi-credito" element={<ProtectedRoute><MyCredit /></ProtectedRoute>} />
           <Route path="/productos" element={<Products />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/checkout/success" element={<Success />} />
