@@ -6,8 +6,20 @@ const ProBanner = () => {
     const { user } = useAuth()
     const navigate = useNavigate()
 
-    // No mostrar si ya es maestro o pyme
     if (user?.user_type === "maestro" || user?.user_type === "pyme") return null
+
+    if (["maestro_pending", "pyme_pending"].includes(user?.user_type)) {
+        return (
+            <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl sm:rounded-3xl p-5 sm:p-6">
+                    <p className="text-sm font-bold text-yellow-800">Postulacion FerreCredito en revision</p>
+                    <p className="text-sm text-yellow-700 mt-1">
+                        El administrador debe aprobar tu solicitud antes de activar los beneficios Maestro/PYME.
+                    </p>
+                </div>
+            </section>
+        )
+    }
 
     return (
         <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">

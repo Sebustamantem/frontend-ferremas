@@ -34,9 +34,9 @@ const Login = () => {
                 {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <input
-                        type="email"
+                        type="text"
                         name="email"
-                        placeholder="Correo electrónico"
+                        placeholder="Correo o usuario"
                         value={form.email}
                         onChange={handleChange}
                         required

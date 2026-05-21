@@ -6,6 +6,8 @@ import api from "../../api/axios"
 const Success = () => {
     const [searchParams] = useSearchParams()
     const [order, setOrder] = useState(null)
+    const [survey, setSurvey] = useState({ rating: 5, comment: "" })
+    const [surveySent, setSurveySent] = useState(false)
     const navigate = useNavigate()
     const orderId = searchParams.get("order_id")
     const method = searchParams.get("method")
@@ -18,6 +20,15 @@ const Success = () => {
                 .catch(err => console.error(err))
         }
     }, [orderId])
+
+    const submitSurvey = async () => {
+        try {
+            await api.post("/surveys", { order_id: orderId, ...survey })
+            setSurveySent(true)
+        } catch (err) {
+            alert(err.response?.data?.message || "No se pudo enviar la encuesta")
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -51,6 +62,34 @@ const Success = () => {
                 )}
 
                 <div className="flex flex-col gap-3">
+                    {!surveySent ? (
+                        <div className="bg-gray-50 rounded-2xl p-4 text-left">
+                            <p className="text-sm font-bold text-gray-800 mb-3">Evalua tu experiencia</p>
+                            <select
+                                value={survey.rating}
+                                onChange={(e) => setSurvey({ ...survey, rating: Number(e.target.value) })}
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm mb-3"
+                            >
+                                {[5, 4, 3, 2, 1].map((score) => (
+                                    <option key={score} value={score}>{score} estrellas</option>
+                                ))}
+                            </select>
+                            <textarea
+                                value={survey.comment}
+                                onChange={(e) => setSurvey({ ...survey, comment: e.target.value })}
+                                placeholder="Comentario opcional"
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm mb-3"
+                            />
+                            <button onClick={submitSurvey} className="w-full bg-gray-900 text-white rounded-xl py-2 text-sm font-semibold">
+                                Enviar encuesta
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="bg-green-50 text-green-700 rounded-xl px-4 py-3 text-sm">
+                            Gracias por responder la encuesta.
+                        </div>
+                    )}
+
                     <button
                         onClick={() => navigate("/productos")}
                         className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-semibold transition"

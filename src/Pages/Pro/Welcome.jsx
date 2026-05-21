@@ -13,38 +13,40 @@ const Welcome = () => {
                     <CheckCircle size={64} className="text-orange-500" />
                 </div>
                 <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                    ¡Bienvenido, {user?.name}!
+                    Bienvenido, {user?.name}
                 </h1>
                 <p className="text-gray-400 text-sm mb-6">
-                    Tu cuenta {user?.user_type === "pyme" ? "PYME" : "de Maestro"} ha sido creada exitosamente.
+                    Tu postulacion {user?.user_type?.includes("pyme") ? "PYME" : "de Maestro"} fue enviada y quedo pendiente de aprobacion.
                 </p>
 
                 <div className="flex flex-col gap-3 mb-8">
                     <div className="flex items-center gap-3 bg-orange-50 rounded-xl p-4 text-left">
                         <Star size={20} className="text-orange-500 shrink-0" />
                         <div>
-                            <p className="text-sm font-semibold text-gray-800">30% en tu primera compra</p>
-                            <p className="text-xs text-gray-400">Descuento aplicado automáticamente</p>
+                            <p className="text-sm font-semibold text-gray-800">Beneficios Maestro/PYME</p>
+                            <p className="text-xs text-gray-400">Se activan cuando el admin aprueba tu postulacion</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-4 text-left">
                         <CreditCard size={20} className="text-gray-700 shrink-0" />
                         <div>
-                            <p className="text-sm font-semibold text-gray-800">FerreCredito disponible</p>
-                            <p className="text-xs text-gray-400">El admin aprobará tu crédito pronto</p>
+                            <p className="text-sm font-semibold text-gray-800">FerreCredito en revision</p>
+                            <p className="text-xs text-gray-400">El admin decide si aprueba o rechaza tu solicitud</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-4 text-left">
                         <Briefcase size={20} className="text-gray-700 shrink-0" />
                         <div>
-                            <p className="text-sm font-semibold text-gray-800">Publica tus servicios</p>
-                            <p className="text-xs text-gray-400">Llega a más clientes en Ferremas</p>
+                            <p className="text-sm font-semibold text-gray-800">Datos recibidos</p>
+                            <p className="text-xs text-gray-400">FERREMAS revisara tu informacion profesional</p>
                         </div>
                     </div>
                 </div>
 
-                <button onClick={() => navigate("/")}
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-semibold transition">
+                <button
+                    onClick={() => navigate("/")}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-semibold transition"
+                >
                     Ir a la tienda
                 </button>
             </div>

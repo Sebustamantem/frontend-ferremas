@@ -14,6 +14,8 @@ const Checkout = () => {
     const [payMethod, setPayMethod] = useState("transbank")
     const [installments, setInstallments] = useState(3)
     const [myCredit, setMyCredit] = useState(null)
+    const [myPoints, setMyPoints] = useState(0)
+    const [pointsToUse, setPointsToUse] = useState(0)
     const [address, setAddress] = useState({
         region: "", city: "", street: "", number: "", zip: "", phone: ""
     })
@@ -36,12 +38,17 @@ const Checkout = () => {
     const discountedTotal = isPro && !user?.first_purchase_used
         ? Math.round(total * 0.7)
         : total
-    const finalTotal = discountedTotal + shipping
+    const maxPointsToUse = Math.min(myPoints, discountedTotal + shipping)
+    const appliedPoints = Math.min(Number(pointsToUse || 0), maxPointsToUse)
+    const finalTotal = Math.max(discountedTotal + shipping - appliedPoints, 0)
     const available = myCredit
         ? Number(myCredit.credit_limit) - Number(myCredit.balance_used)
         : 0
 
     useEffect(() => {
+        api.get("/points/my")
+            .then(res => setMyPoints(Number(res.data.balance || 0)))
+            .catch(() => setMyPoints(0))
         if (isPro) {
             api.get("/ferre-credit/my")
                 .then(res => setMyCredit(res.data))
@@ -90,7 +97,7 @@ const Checkout = () => {
 
         try {
             if (payMethod === "transbank") {
-                const res = await api.post("/payment/create", { address })
+                const res = await api.post("/payment/create", { address, points_to_use: appliedPoints })
                 const form = document.createElement("form")
                 form.method = "POST"
                 form.action = res.data.url
@@ -102,11 +109,11 @@ const Checkout = () => {
                 document.body.appendChild(form)
                 form.submit()
             } else if (payMethod === "transferencia") {
-                const res = await api.post("/payment/transfer", { address })
+                const res = await api.post("/payment/transfer", { address, points_to_use: appliedPoints })
                 await clearCart()
                 navigate(`/checkout/success?order_id=${res.data.order_id}&method=transferencia`)
             } else {
-                const res = await api.post("/ferre-credit/pay", { installments, address })
+                const res = await api.post("/ferre-credit/pay", { installments, address, points_to_use: appliedPoints })
                 await clearCart()
                 navigate(`/checkout/success?order_id=${res.data.order_id}&method=ferrecredito`)
             }
@@ -380,6 +387,34 @@ const Checkout = () => {
                                             <span className="text-green-600 font-medium">Descuento 30%</span>
                                             <span className="text-green-600 font-medium">
                                                 -${(total - discountedTotal).toLocaleString("es-CL")}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {myPoints > 0 && (
+                                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 my-2">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div>
+                                                    <p className="text-sm font-semibold text-blue-700">Puntos Ferremas</p>
+                                                    <p className="text-xs text-blue-500">Disponibles: {myPoints.toLocaleString("es-CL")}</p>
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max={maxPointsToUse}
+                                                    value={pointsToUse}
+                                                    onChange={(e) => setPointsToUse(Math.min(Number(e.target.value || 0), maxPointsToUse))}
+                                                    className="w-24 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {appliedPoints > 0 && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-blue-600 font-medium">Descuento puntos</span>
+                                            <span className="text-blue-600 font-medium">
+                                                -${appliedPoints.toLocaleString("es-CL")}
                                             </span>
                                         </div>
                                     )}

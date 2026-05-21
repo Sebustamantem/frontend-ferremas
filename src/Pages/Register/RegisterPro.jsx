@@ -18,10 +18,10 @@ const RegisterPro = () => {
     const { user, login } = useAuth()
     const navigate = useNavigate()
     const isUpgrade = Boolean(user && user.user_type === "cliente")
-    const title = isUpgrade ? "Actualiza tu cuenta a Maestro/PYME" : "Registro Profesional"
+    const title = isUpgrade ? "Postula tu cuenta a Maestro/PYME" : "Postulacion Profesional"
     const subtitle = isUpgrade
-        ? "Convierte tu cuenta existente en Pro para acceder a FerreCredito y beneficios exclusivos"
-        : "Accede a FerreCredito y beneficios exclusivos"
+        ? "El administrador revisara tu solicitud antes de activar FerreCredito y beneficios exclusivos"
+        : "Solicita acceso a FerreCredito y beneficios exclusivos"
 
     useEffect(() => {
         if (!user) return
@@ -278,8 +278,8 @@ const RegisterPro = () => {
                             {loading
                                 ? "Procesando..."
                                 : isUpgrade
-                                    ? "Actualizar cuenta"
-                                    : `Registrarme como ${userType === "maestro" ? "Maestro" : "PYME"}`
+                                    ? "Enviar postulacion"
+                                    : `Postular como ${userType === "maestro" ? "Maestro" : "PYME"}`
                             }
                         </button>
                     </form>

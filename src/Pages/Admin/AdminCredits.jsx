@@ -29,7 +29,7 @@ const AdminCredits = () => {
                 api.get("/users"),
                 api.get("/ferre-credit/all")
             ])
-            setUsers(usersRes.data.filter(u => ["maestro", "pyme"].includes(u.user_type)))
+            setUsers(usersRes.data.filter(u => ["maestro", "pyme", "maestro_pending", "pyme_pending"].includes(u.user_type)))
             setCredits(creditsRes.data)
         } catch (err) {
             setError(err.response?.data?.message || "Error al cargar FerreCredito")
@@ -73,6 +73,16 @@ const AdminCredits = () => {
         }
     }
 
+    const handleRejectApplication = async (u) => {
+        if (!confirm(`Rechazar postulacion de ${u.name}?`)) return
+        try {
+            await api.post(`/ferre-credit/user/${u.id}/reject`)
+            fetchData()
+        } catch (err) {
+            alert(err.response?.data?.message || "Error al rechazar postulacion")
+        }
+    }
+
     const handlePayInstallment = async (installmentId) => {
         if (!confirm("¿Registrar pago de esta cuota?")) return
         try {
@@ -84,6 +94,12 @@ const AdminCredits = () => {
     }
 
     const getCreditForUser = (userId) => credits.find(c => c.user_id === userId)
+    const isPendingApplication = (type) => ["maestro_pending", "pyme_pending"].includes(type)
+    const getUserTypeLabel = (type) => {
+        if (type === "maestro" || type === "maestro_pending") return "Maestro"
+        if (type === "pyme" || type === "pyme_pending") return "PYME"
+        return "Cliente"
+    }
 
     const statusColors = {
         active: "bg-yellow-100 text-yellow-600",
@@ -170,7 +186,7 @@ const AdminCredits = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${u.user_type === "maestro"
+                                                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${u.user_type.includes("maestro")
                                                             ? "bg-orange-100 text-orange-600"
                                                             : "bg-blue-100 text-blue-600"
                                                         }`}>
@@ -187,7 +203,11 @@ const AdminCredits = () => {
                                                     {credit ? `$${available.toLocaleString("es-CL")}` : "—"}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    {credit ? (
+                                                    {isPendingApplication(u.user_type) ? (
+                                                        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700">
+                                                            Pendiente admin
+                                                        </span>
+                                                    ) : credit ? (
                                                         <span className={`text-xs font-semibold px-3 py-1 rounded-full ${credit.is_active
                                                                 ? "bg-green-100 text-green-600"
                                                                 : "bg-red-100 text-red-500"
@@ -199,10 +219,23 @@ const AdminCredits = () => {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <button onClick={() => handleSetCredit(u)}
-                                                        className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-4 py-2 rounded-xl transition">
-                                                        {credit ? "Editar" : "Asignar"}
-                                                    </button>
+                                                    {isPendingApplication(u.user_type) ? (
+                                                        <div className="flex justify-center gap-2">
+                                                            <button onClick={() => handleSetCredit(u)}
+                                                                className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-xl transition">
+                                                                Aprobar
+                                                            </button>
+                                                            <button onClick={() => handleRejectApplication(u)}
+                                                                className="bg-red-50 hover:bg-red-100 text-red-600 text-xs px-3 py-2 rounded-xl transition">
+                                                                Rechazar
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button onClick={() => handleSetCredit(u)}
+                                                            className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-4 py-2 rounded-xl transition">
+                                                            {credit ? "Editar" : "Asignar"}
+                                                        </button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         )
