@@ -116,9 +116,9 @@ const AdminCredits = () => {
                         <h1 className="text-3xl font-bold text-gray-800">FerreCredito</h1>
                         <p className="text-gray-500 text-sm mt-1">Gestión de créditos para maestros y PYMEs</p>
                     </div>
-                    <button onClick={() => navigate("/admin/products")}
+                    <button onClick={() => navigate("/admin/dashboard")}
                         className="text-sm text-orange-500 hover:underline font-medium">
-                        ← Volver
+                        Volver al dashboard
                     </button>
                 </div>
 

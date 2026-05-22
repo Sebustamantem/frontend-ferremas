@@ -53,9 +53,9 @@ const AdminUsers = () => {
                         <h1 className="text-3xl font-bold text-gray-800">Gestión de Usuarios</h1>
                         <p className="text-gray-500 text-sm mt-1">{users.length} usuarios registrados</p>
                     </div>
-                    <button onClick={() => navigate("/admin/products")}
+                    <button onClick={() => navigate("/admin/dashboard")}
                         className="text-sm text-orange-500 hover:underline font-medium">
-                        ← Volver a productos
+                        Volver al dashboard
                     </button>
                 </div>
 

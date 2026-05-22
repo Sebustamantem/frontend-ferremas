@@ -62,7 +62,7 @@ const ChangeInitialPassword = () => {
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Cambia tu contraseña inicial</h1>
                 <p className="text-sm text-gray-500 mt-2">
-                    {user?.name}, por seguridad debes reemplazar la contraseña basada en tu RUT antes de entrar al panel.
+                    {user?.name}, por seguridad debes reemplazar la contraseña temporal antes de entrar al panel.
                 </p>
 
                 {error && (

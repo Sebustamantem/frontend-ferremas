@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
+import { Eye, EyeOff, Lock, Mail } from "lucide-react"
 import { login as loginService } from "../../api/authService"
 import { useAuth } from "../../context/AuthContext"
 
@@ -7,13 +8,16 @@ const Login = () => {
     const [form, setForm] = useState({ email: "", password: "" })
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
     const { login } = useAuth()
     const navigate = useNavigate()
 
-    const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+    const handleChange = (event) => {
+        setForm({ ...form, [event.target.name]: event.target.value })
+    }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
+    const handleSubmit = async (event) => {
+        event.preventDefault()
         setLoading(true)
         setError("")
         try {
@@ -21,48 +25,87 @@ const Login = () => {
             login(res.data.user, res.data.token)
             navigate("/")
         } catch (err) {
-            setError(err.response?.data?.message || "Error al iniciar sesión")
+            setError(err.response?.data?.message || "Error al iniciar sesion")
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-                <h2 className="text-2xl font-bold text-center mb-6">Iniciar Sesión</h2>
-                {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <input
-                        type="text"
-                        name="email"
-                        placeholder="Correo o usuario"
-                        value={form.email}
-                        onChange={handleChange}
-                        required
-                        className="border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Contraseña"
-                        value={form.password}
-                        onChange={handleChange}
-                        required
-                        className="border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
-                    >
-                        {loading ? "Cargando..." : "Iniciar Sesión"}
-                    </button>
-                </form>
-                <p className="text-center text-sm mt-4">
-                    ¿No tienes cuenta?{" "}
-                    <Link to="/register" className="font-semibold text-orange-500 underline">Regístrate</Link>
-                </p>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
+            <div className="w-full max-w-md">
+                <div className="flex justify-center mb-6">
+                    <img src="/images/Logo.png" alt="Ferremas" className="h-20 object-contain drop-shadow-lg" />
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-lg p-8">
+                    <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">Iniciar Sesion</h2>
+                    <p className="text-center text-gray-400 text-sm mb-6">
+                        Entra para comprar, revisar pedidos y usar tus beneficios.
+                    </p>
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm text-center py-2 px-4 rounded-xl mb-4">
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-medium text-gray-500">Correo o usuario</label>
+                            <div className="relative">
+                                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type="text"
+                                    name="email"
+                                    placeholder="Correo o usuario"
+                                    value={form.email}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-medium text-gray-500">Contrasena</label>
+                            <div className="relative">
+                                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    placeholder="Ingresa tu contrasena"
+                                    value={form.password}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full border border-gray-200 rounded-xl pl-11 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition disabled:opacity-60 mt-1"
+                        >
+                            {loading ? "Cargando..." : "Iniciar Sesion"}
+                        </button>
+                    </form>
+
+                    <p className="text-center text-sm mt-5 text-gray-500">
+                        No tienes cuenta?{" "}
+                        <Link to="/register" className="font-semibold text-orange-500 hover:underline">
+                            Registrate
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     )

@@ -17,7 +17,7 @@ const Navbar = () => {
   const menuRef = useRef(null)
   const isStaff = ["admin", "vendedor", "bodeguero", "contador"].includes(user?.role)
   const roleHomePath = user?.role === "admin"
-    ? "/admin/products"
+    ? "/admin/dashboard"
     : user?.role === "vendedor"
       ? "/vendedor"
       : user?.role === "bodeguero"
@@ -204,7 +204,7 @@ const Navbar = () => {
 
                         {/* Link Admin */}
                         {user.role === "admin" && (
-                          <Link to="/admin/products" onClick={() => setIsUserMenuOpen(false)}
+                          <Link to="/admin/dashboard" onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-b border-gray-100">
                             Panel admin
                           </Link>

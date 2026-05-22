@@ -4,6 +4,7 @@ import Login from "./Pages/Login/Login"
 import Register from "./Pages/Register/Register"
 import RegisterPro from "./Pages/Register/RegisterPro"
 import AdminProducts from "./Pages/Admin/AdminProducts"
+import AdminDashboard from "./Pages/Admin/AdminDashboard"
 import AdminUsers from "./Pages/Admin/AdminUsers"
 import AdminCredits from "./Pages/Admin/AdminCredits"
 import VendedorPanel from "./Pages/Vendedor/VendedorPanel"
@@ -45,7 +46,7 @@ const RoleRoute = ({ children, roles }) => {
 }
 
 const getRoleHomePath = (role) => {
-  if (role === "admin") return "/admin/products"
+  if (role === "admin") return "/admin/dashboard"
   if (role === "vendedor") return "/vendedor"
   if (role === "bodeguero") return "/bodeguero"
   if (role === "contador") return "/contador"
@@ -93,6 +94,7 @@ function AppContent() {
           <Route path="/checkout/pending" element={<Pending />} />
           <Route path="/mis-pedidos" element={<CustomerRoute requireAuth><OrderHistory /></CustomerRoute>} />
           <Route path="/perfil" element={<CustomerRoute requireAuth><Profile /></CustomerRoute>} />
+          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/credits" element={<AdminRoute><AdminCredits /></AdminRoute>} />

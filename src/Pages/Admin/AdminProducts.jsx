@@ -176,6 +176,13 @@ const AdminProducts = () => {
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <button
+                                    onClick={() => navigate("/admin/dashboard")}
+                                    className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/15 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                >
+                                    <Boxes size={16} />
+                                    Dashboard
+                                </button>
+                                <button
                                     onClick={() => navigate("/admin/users")}
                                     className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/15 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
                                 >

@@ -2,9 +2,18 @@ import { useState, useEffect } from "react"
 import { useCart } from "../../context/CartContext"
 import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
-import { ShoppingCart, Trash2, CreditCard, ArrowLeft, Landmark } from "lucide-react"
+import { ArrowLeft, Briefcase, Coins, CreditCard, Landmark, ShoppingCart, Trash2 } from "lucide-react"
 import api from "../../api/axios"
 import { regions } from "../../data/chileRegions"
+
+const calculateEarnedPoints = (amount) => {
+    const purchaseAmount = Number(amount || 0)
+    if (purchaseAmount <= 0) return 0
+    if (purchaseAmount >= 50000) return 250
+    if (purchaseAmount >= 30000) return 200
+    if (purchaseAmount >= 10000) return 150
+    return 100
+}
 
 const Checkout = () => {
     const { cart, removeFromCart, removeServiceFromCart, total, clearCart } = useCart()
@@ -32,10 +41,14 @@ const Checkout = () => {
     const selectedRegion = regions.find((region) => region.name === address.region)
     const isPro = ["maestro", "pyme"].includes(user?.user_type)
     const isAddressComplete = address.region && address.city && address.street && address.phone
-    const productTotal = cart
-        .filter((item) => item.item_type !== "service")
+    const productItems = cart.filter((item) => item.item_type !== "service")
+    const serviceItems = cart.filter((item) => item.item_type === "service")
+    const productTotal = productItems
+        .reduce((acc, item) => acc + Number(item.price) * item.quantity, 0)
+    const serviceTotal = serviceItems
         .reduce((acc, item) => acc + Number(item.price) * item.quantity, 0)
     const shipping = productTotal > 0 && productTotal < 50000 ? 4990 : 0
+    const earnedPoints = calculateEarnedPoints(productTotal)
 
     // Calcular total con descuento primera compra
     const discountedTotal = isPro && !user?.first_purchase_used
@@ -185,8 +198,24 @@ const Checkout = () => {
                                                 </div>
                                             )}
                                             <div className="flex-1">
-                                                <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
-                                                <p className="text-xs text-gray-400 mt-0.5">Cantidad: {item.quantity}</p>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
+                                                    {item.item_type === "service" && (
+                                                        <span className="text-[11px] font-semibold text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">
+                                                            Asesoria
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-gray-400 mt-0.5">
+                                                    {item.item_type === "service"
+                                                        ? "Contacto liberado despues del pago"
+                                                        : `Cantidad: ${item.quantity}`}
+                                                </p>
+                                                {item.item_type === "service" && (
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        Ferremas cobra solo la confirmacion. El servicio final se acuerda directo con el maestro/PYME.
+                                                    </p>
+                                                )}
                                                 <p className="text-sm font-bold text-orange-500 mt-1">
                                                     ${Number(item.price * item.quantity).toLocaleString("es-CL")}
                                                 </p>
@@ -368,38 +397,58 @@ const Checkout = () => {
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-44">
                                 <h2 className="font-bold text-gray-800 mb-4">Resumen del Pedido</h2>
 
-                                <div className="flex flex-col gap-3 mb-4">
-                                    {cart.map((item) => (
-                                        <div key={item.id} className="flex justify-between text-sm">
-                                            <span className="text-gray-500 line-clamp-1 flex-1">{item.name}</span>
-                                            <span className="font-medium text-gray-800 ml-2">
-                                                ${Number(item.price * item.quantity).toLocaleString("es-CL")}
-                                            </span>
-                                        </div>
-                                    ))}
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                                        <p className="text-xs text-gray-400">Productos</p>
+                                        <p className="text-base font-bold text-gray-800">${productTotal.toLocaleString("es-CL")}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-orange-100 bg-orange-50 p-3">
+                                        <p className="text-xs text-orange-500">Asesorias</p>
+                                        <p className="text-base font-bold text-orange-600">${serviceTotal.toLocaleString("es-CL")}</p>
+                                    </div>
                                 </div>
 
-                                <div className="border-t border-gray-100 pt-4 mb-4 flex flex-col gap-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Subtotal</span>
-                                        <span className="font-medium">${total.toLocaleString("es-CL")}</span>
+                                {serviceItems.length > 0 && (
+                                    <div className="rounded-xl border border-orange-100 bg-orange-50 p-3 mb-4">
+                                        <div className="flex items-start gap-2">
+                                            <Briefcase size={18} className="text-orange-500 mt-0.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-bold text-gray-800">Contacto maestro/PYME</p>
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                    Al confirmar el pago, el voucher mostrara los datos del profesional y se enviara el correo mixto de contacto.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
+                                )}
+
+                                <div className="border-t border-gray-100 pt-4 mb-4 flex flex-col gap-2.5">
+                                    <SummaryRow label="Subtotal productos" value={`$${productTotal.toLocaleString("es-CL")}`} />
+
+                                    {serviceTotal > 0 && (
+                                        <SummaryRow
+                                            label={`Asesorias (${serviceItems.length})`}
+                                            value={`$${serviceTotal.toLocaleString("es-CL")}`}
+                                            tone="orange"
+                                        />
+                                    )}
 
                                     {isPro && !user?.first_purchase_used && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-green-600 font-medium">Descuento 30%</span>
-                                            <span className="text-green-600 font-medium">
-                                                -${(total - discountedTotal).toLocaleString("es-CL")}
-                                            </span>
-                                        </div>
+                                        <SummaryRow
+                                            label="Descuento primera compra"
+                                            value={`-$${(total - discountedTotal).toLocaleString("es-CL")}`}
+                                            tone="green"
+                                        />
                                     )}
 
                                     {myPoints > 0 && (
-                                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 my-2">
+                                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 my-1">
                                             <div className="flex items-center justify-between gap-3">
                                                 <div>
                                                     <p className="text-sm font-semibold text-blue-700">Puntos Ferremas</p>
-                                                    <p className="text-xs text-blue-500">Disponibles: {myPoints.toLocaleString("es-CL")}</p>
+                                                    <p className="text-xs text-blue-500">
+                                                        Disponibles: {myPoints.toLocaleString("es-CL")} puntos
+                                                    </p>
                                                 </div>
                                                 <input
                                                     type="number"
@@ -414,20 +463,31 @@ const Checkout = () => {
                                     )}
 
                                     {appliedPoints > 0 && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-blue-600 font-medium">Descuento puntos</span>
-                                            <span className="text-blue-600 font-medium">
-                                                -${appliedPoints.toLocaleString("es-CL")}
-                                            </span>
-                                        </div>
+                                        <SummaryRow
+                                            label="Descuento por puntos"
+                                            value={`-$${appliedPoints.toLocaleString("es-CL")}`}
+                                            tone="blue"
+                                        />
                                     )}
 
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Despacho</span>
-                                        <span className="font-medium text-green-500">
-                                            {productTotal === 0 ? "No aplica" : shipping === 0 ? "Gratis" : `$${shipping.toLocaleString("es-CL")}`}
-                                        </span>
-                                    </div>
+                                    <SummaryRow
+                                        label="Despacho"
+                                        value={productTotal === 0 ? "No aplica" : shipping === 0 ? "Gratis" : `$${shipping.toLocaleString("es-CL")}`}
+                                        tone={shipping === 0 ? "green" : "default"}
+                                    />
+
+                                    {earnedPoints > 0 && (
+                                        <div className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-3 flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-2">
+                                                <Coins size={18} className="text-amber-600" />
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-800">Puntos que ganaras</p>
+                                                    <p className="text-xs text-amber-700">Calculados sobre productos vendidos</p>
+                                                </div>
+                                            </div>
+                                            <span className="text-sm font-bold text-amber-700">+{earnedPoints}</span>
+                                        </div>
+                                    )}
 
                                     <div className="flex justify-between text-lg font-bold mt-2 pt-3 border-t border-gray-100">
                                         <span>Total</span>
@@ -484,6 +544,22 @@ const Checkout = () => {
                     </div>
                 )}
             </div>
+        </div>
+    )
+}
+
+const SummaryRow = ({ label, value, tone = "default" }) => {
+    const toneClass = {
+        default: "text-gray-800",
+        green: "text-green-600",
+        blue: "text-blue-600",
+        orange: "text-orange-600",
+    }[tone]
+
+    return (
+        <div className="flex justify-between gap-4 text-sm">
+            <span className="text-gray-500">{label}</span>
+            <span className={`font-medium text-right ${toneClass}`}>{value}</span>
         </div>
     )
 }
