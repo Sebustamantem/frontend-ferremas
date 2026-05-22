@@ -32,7 +32,10 @@ const Checkout = () => {
     const selectedRegion = regions.find((region) => region.name === address.region)
     const isPro = ["maestro", "pyme"].includes(user?.user_type)
     const isAddressComplete = address.region && address.city && address.street && address.phone
-    const shipping = total >= 50000 ? 0 : 4990
+    const productTotal = cart
+        .filter((item) => item.item_type !== "service")
+        .reduce((acc, item) => acc + Number(item.price) * item.quantity, 0)
+    const shipping = productTotal > 0 && productTotal < 50000 ? 4990 : 0
 
     // Calcular total con descuento primera compra
     const discountedTotal = isPro && !user?.first_purchase_used
@@ -168,7 +171,7 @@ const Checkout = () => {
                             {/* Productos */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-100">
-                                    <h2 className="font-bold text-gray-800">Productos ({cart.length})</h2>
+                                    <h2 className="font-bold text-gray-800">Productos y asesorias ({cart.length})</h2>
                                 </div>
                                 <div className="divide-y divide-gray-100">
                                     {cart.map((item) => (
@@ -422,7 +425,7 @@ const Checkout = () => {
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Despacho</span>
                                         <span className="font-medium text-green-500">
-                                            {shipping === 0 ? "Gratis" : `$${shipping.toLocaleString("es-CL")}`}
+                                            {productTotal === 0 ? "No aplica" : shipping === 0 ? "Gratis" : `$${shipping.toLocaleString("es-CL")}`}
                                         </span>
                                     </div>
 
@@ -446,9 +449,9 @@ const Checkout = () => {
                                     )}
                                 </div>
 
-                                {total < 50000 && (
+                                {productTotal > 0 && productTotal < 50000 && (
                                     <div className="bg-orange-50 text-orange-600 text-xs p-3 rounded-xl mb-4 text-center">
-                                        ¡Agrega ${(50000 - total).toLocaleString("es-CL")} más para despacho gratis!
+                                        Agrega ${(50000 - productTotal).toLocaleString("es-CL")} mas en productos para despacho gratis.
                                     </div>
                                 )}
 
