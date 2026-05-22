@@ -54,6 +54,18 @@ const Success = () => {
                                 <span className="font-medium">${Number(item.price * item.quantity).toLocaleString("es-CL")}</span>
                             </div>
                         ))}
+                        {order.service_requests?.map((service) => (
+                            <div key={`service-${service.id}`} className="border-t border-gray-200 mt-2 pt-2 text-sm">
+                                <div className="flex justify-between py-1">
+                                    <span className="text-gray-600">{service.title || "Asesoria profesional"}</span>
+                                    <span className="font-medium">${Number(service.amount || 5000).toLocaleString("es-CL")}</span>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    Contacto: {service.professional_name} · {service.professional_email}
+                                    {service.professional_phone ? ` · ${service.professional_phone}` : ""}
+                                </p>
+                            </div>
+                        ))}
                         <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-bold">
                             <span>Total</span>
                             <span className="text-orange-500">${Number(order.total).toLocaleString("es-CL")}</span>

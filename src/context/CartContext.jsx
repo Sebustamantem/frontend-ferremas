@@ -38,6 +38,21 @@ export const CartProvider = ({ children }) => {
         }
     }
 
+    const addServiceToCart = async (serviceId) => {
+        if (!user) return false
+        try {
+            setLoading(true)
+            await api.post(`/services/${serviceId}/cart`)
+            await fetchCart()
+            return true
+        } catch (err) {
+            console.error(err)
+            return false
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const updateQuantity = async (productId, quantity) => {
         try {
             if (quantity < 1) return
@@ -51,6 +66,15 @@ export const CartProvider = ({ children }) => {
     const removeFromCart = async (productId) => {
         try {
             await api.delete(`/cart/${productId}`)
+            await fetchCart()
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    const removeServiceFromCart = async (serviceId) => {
+        try {
+            await api.delete(`/services/${serviceId}/cart`)
             await fetchCart()
         } catch (err) {
             console.error(err)
@@ -74,7 +98,7 @@ export const CartProvider = ({ children }) => {
         .sort()[0] || null
 
     return (
-        <CartContext.Provider value={{ cart, loading, addToCart, updateQuantity, removeFromCart, clearCart, total, itemCount, reservationExpiresAt, fetchCart }}>
+        <CartContext.Provider value={{ cart, loading, addToCart, addServiceToCart, updateQuantity, removeFromCart, removeServiceFromCart, clearCart, total, itemCount, reservationExpiresAt, fetchCart }}>
             {children}
         </CartContext.Provider>
     )

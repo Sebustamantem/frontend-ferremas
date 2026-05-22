@@ -3,10 +3,12 @@ import { Briefcase, MapPin, Phone } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
+import { useCart } from "../../context/CartContext"
 
 const ProfessionalServices = () => {
     const [services, setServices] = useState([])
     const { user } = useAuth()
+    const { addServiceToCart } = useCart()
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -21,8 +23,8 @@ const ProfessionalServices = () => {
             return
         }
         try {
-            await api.post(`/services/${serviceId}/contact`)
-            alert("Solicitud registrada. FERREMAS debe enviar el correo de contacto al cliente y al maestro/PYME.")
+            const ok = await addServiceToCart(serviceId)
+            if (ok) alert("Asesoria agregada al carrito por $5.000. El contacto se libera despues del pago.")
         } catch (err) {
             alert(err.response?.data?.message || "No se pudo solicitar el servicio")
         }

@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 
 const CartDrawer = ({ isOpen, onClose }) => {
-    const { cart, removeFromCart, clearCart, updateQuantity, total, itemCount, reservationExpiresAt, fetchCart } = useCart()
+    const { cart, removeFromCart, removeServiceFromCart, clearCart, updateQuantity, total, itemCount, reservationExpiresAt, fetchCart } = useCart()
     const { user } = useAuth()
     const navigate = useNavigate()
     const [remainingSeconds, setRemainingSeconds] = useState(null)
@@ -115,6 +115,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                                         <p className="text-sm font-bold text-orange-500 mt-1">
                                             ${Number(item.price * item.quantity).toLocaleString("es-CL")}
                                         </p>
+                                        {item.item_type !== "service" ? (
                                         <div className="flex items-center gap-2 mt-2">
                                             <button
                                                 onClick={() => {
@@ -133,8 +134,11 @@ const CartDrawer = ({ isOpen, onClose }) => {
                                                 <Plus size={12} />
                                             </button>
                                         </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-400 mt-2">Asesoria profesional</p>
+                                        )}
                                     </div>
-                                    <button onClick={() => removeFromCart(item.product_id)}
+                                    <button onClick={() => item.item_type === "service" ? removeServiceFromCart(item.service_id) : removeFromCart(item.product_id)}
                                         className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition shrink-0">
                                         <Trash2 size={16} />
                                     </button>

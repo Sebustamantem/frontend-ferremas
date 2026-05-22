@@ -7,7 +7,7 @@ import api from "../../api/axios"
 import { regions } from "../../data/chileRegions"
 
 const Checkout = () => {
-    const { cart, removeFromCart, total, clearCart } = useCart()
+    const { cart, removeFromCart, removeServiceFromCart, total, clearCart } = useCart()
     const { user } = useAuth()
     const navigate = useNavigate()
     const [payLoading, setPayLoading] = useState(false)
@@ -188,7 +188,7 @@ const Checkout = () => {
                                                     ${Number(item.price * item.quantity).toLocaleString("es-CL")}
                                                 </p>
                                             </div>
-                                            <button onClick={() => removeFromCart(item.product_id || item.id)}
+                                            <button onClick={() => item.item_type === "service" ? removeServiceFromCart(item.service_id) : removeFromCart(item.product_id || item.id)}
                                                 className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition">
                                                 <Trash2 size={16} />
                                             </button>
