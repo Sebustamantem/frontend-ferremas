@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Briefcase, MapPin, Phone } from "lucide-react"
+import { Briefcase, Mail, MapPin, Phone } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
@@ -36,8 +36,8 @@ const ProfessionalServices = () => {
         <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-10">
             <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6">
                 <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Servicios de Maestros y PYMEs</h2>
-                    <p className="text-gray-400 text-sm mt-1">Contacta profesionales aprobados por FERREMAS</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Productos y servicios de Maestros/PYMEs</h2>
+                    <p className="text-gray-400 text-sm mt-1">Agrega una asesoria al carrito por $5.000 y recibe los datos de contacto al pagar.</p>
                 </div>
                 {["maestro", "pyme"].includes(user?.user_type) && (
                     <button
@@ -61,6 +61,10 @@ const ProfessionalServices = () => {
                         <div className="flex flex-wrap gap-3 text-xs text-gray-400 mt-4">
                             {service.city && <span className="inline-flex items-center gap-1"><MapPin size={13} />{service.city}</span>}
                             {service.phone && <span className="inline-flex items-center gap-1"><Phone size={13} />{service.phone}</span>}
+                            {service.email && <span className="inline-flex items-center gap-1"><Mail size={13} />Correo al pagar</span>}
+                        </div>
+                        <div className="mt-4 rounded-lg bg-orange-50 border border-orange-100 px-3 py-2 text-xs text-orange-700">
+                            El servicio final se acuerda y paga directo con el maestro/PYME.
                         </div>
                         <button
                             onClick={() => handleContact(service.id)}

@@ -116,7 +116,7 @@ const RegisterPro = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4 py-10">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
             <div className="w-full max-w-lg">
 
                 {/* Logo */}
@@ -125,7 +125,7 @@ const RegisterPro = () => {
                 </div>
 
                 {/* Card */}
-                <div className="bg-white rounded-3xl shadow-2xl p-8">
+                <div className="bg-white rounded-2xl shadow-lg p-8">
                     <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">{title}</h2>
                     <p className="text-center text-gray-400 text-sm mb-6">
                         {subtitle}

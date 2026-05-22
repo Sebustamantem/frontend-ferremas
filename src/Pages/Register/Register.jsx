@@ -74,7 +74,7 @@ const Register = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-orange-600 px-4 py-10">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
             <div className="w-full max-w-md">
 
                 {/* Logo */}
@@ -83,7 +83,7 @@ const Register = () => {
                 </div>
 
                 {/* Card */}
-                <div className="bg-white rounded-3xl shadow-2xl p-8">
+                <div className="bg-white rounded-2xl shadow-lg p-8">
                     <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">Crear Cuenta</h2>
                     <p className="text-center text-gray-400 text-sm mb-6">Regístrate para comenzar a comprar</p>
 

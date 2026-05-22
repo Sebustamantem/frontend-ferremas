@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { CheckCircle, ShoppingBag } from "lucide-react"
+import { CheckCircle, Coins, ShoppingBag } from "lucide-react"
 import api from "../../api/axios"
 
 const Success = () => {
@@ -70,6 +70,23 @@ const Success = () => {
                             <span>Total</span>
                             <span className="text-orange-500">${Number(order.total).toLocaleString("es-CL")}</span>
                         </div>
+                        {Number(order.points_earned || 0) > 0 && (
+                            <div className="mt-3 rounded-xl bg-orange-50 border border-orange-100 px-3 py-3 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    <Coins size={18} className="text-orange-500" />
+                                    <span className="text-sm font-semibold text-gray-800">Puntos ganados</span>
+                                </div>
+                                <span className="text-sm font-bold text-orange-600">
+                                    +{Number(order.points_earned).toLocaleString("es-CL")}
+                                </span>
+                            </div>
+                        )}
+                        {Number(order.points_used || 0) > 0 && (
+                            <div className="mt-2 flex justify-between text-xs text-blue-600">
+                                <span>Puntos usados en esta compra</span>
+                                <span>-{Number(order.points_used).toLocaleString("es-CL")}</span>
+                            </div>
+                        )}
                     </div>
                 )}
 

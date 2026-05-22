@@ -135,7 +135,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                                             </button>
                                         </div>
                                         ) : (
-                                            <p className="text-xs text-gray-400 mt-2">Asesoria profesional</p>
+                                            <p className="text-xs text-gray-400 mt-2">Asesoria profesional: contacto liberado al pagar</p>
                                         )}
                                     </div>
                                     <button onClick={() => item.item_type === "service" ? removeServiceFromCart(item.service_id) : removeFromCart(item.product_id)}
