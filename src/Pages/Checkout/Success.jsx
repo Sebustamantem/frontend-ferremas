@@ -16,9 +16,6 @@ const Success = () => {
     const receiptPayload = order
         ? `Ferremas|Pedido:${order.id}|Codigo:${receiptCode}|Total:${Number(order.total || 0)}|Estado:${order.status}`
         : ""
-    const qrUrl = receiptPayload
-        ? `https://chart.googleapis.com/chart?cht=qr&chs=180x180&chl=${encodeURIComponent(receiptPayload)}`
-        : ""
 
     useEffect(() => {
         if (orderId) {
@@ -99,11 +96,7 @@ const Success = () => {
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Comprobante digital</p>
                             <p className="mt-1 text-lg font-bold text-gray-900">{receiptCode}</p>
                             <div className="mt-3 flex justify-center">
-                                <img
-                                    src={qrUrl}
-                                    alt={`QR comprobante ${receiptCode}`}
-                                    className="h-36 w-36 rounded-xl border border-gray-100 bg-white p-2"
-                                />
+                                <PseudoQr value={receiptPayload} />
                             </div>
                             <p className="mt-3 text-xs text-gray-500">
                                 Presenta este codigo para retiro en tienda o seguimiento del pedido.
@@ -156,6 +149,53 @@ const Success = () => {
                     </button>
                 </div>
             </div>
+        </div>
+    )
+}
+
+const PseudoQr = ({ value }) => {
+    const size = 17
+    const cells = []
+    let seed = 0
+
+    for (let i = 0; i < value.length; i += 1) {
+        seed = (seed * 31 + value.charCodeAt(i)) >>> 0
+    }
+
+    const finder = (x, y) =>
+        (x < 7 && y < 7) ||
+        (x >= size - 7 && y < 7) ||
+        (x < 7 && y >= size - 7)
+
+    const finderInner = (x, y) =>
+        (x >= 2 && x <= 4 && y >= 2 && y <= 4) ||
+        (x >= size - 5 && x <= size - 3 && y >= 2 && y <= 4) ||
+        (x >= 2 && x <= 4 && y >= size - 5 && y <= size - 3)
+
+    for (let y = 0; y < size; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+            const bit = ((seed + x * 17 + y * 29 + x * y * 7) % 5) < 2
+            if (finder(x, y) || bit) {
+                cells.push(
+                    <rect
+                        key={`${x}-${y}`}
+                        x={x}
+                        y={y}
+                        width="1"
+                        height="1"
+                        fill={finder(x, y) && !finderInner(x, y) ? "#111827" : "#111827"}
+                    />
+                )
+            }
+        }
+    }
+
+    return (
+        <div className="rounded-xl border border-gray-100 bg-white p-3">
+            <svg viewBox={`0 0 ${size} ${size}`} className="h-36 w-36" role="img" aria-label="Codigo QR del comprobante">
+                <rect width={size} height={size} fill="#ffffff" />
+                {cells}
+            </svg>
         </div>
     )
 }
