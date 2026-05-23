@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import { CheckCircle, Coins, ShoppingBag } from "lucide-react"
+import { QRCodeSVG } from "qrcode.react"
 import api from "../../api/axios"
 
 const Success = () => {
@@ -154,26 +155,15 @@ const Success = () => {
 }
 
 const QrCode = ({ value }) => {
-    const [sourceIndex, setSourceIndex] = useState(0)
-    const sources = [
-        `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=12&data=${encodeURIComponent(value)}`,
-        `https://quickchart.io/qr?size=180&margin=2&text=${encodeURIComponent(value)}`,
-    ]
-
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-2">
-            {sourceIndex < sources.length ? (
-                <img
-                    src={sources[sourceIndex]}
-                    alt="QR del comprobante"
-                    className="h-36 w-36"
-                    onError={() => setSourceIndex((current) => current + 1)}
-                />
-            ) : (
-                <div className="h-36 w-36 flex items-center justify-center text-center text-xs text-gray-500">
-                    QR no disponible. Usa el codigo del comprobante.
-                </div>
-            )}
+            <QRCodeSVG
+                value={value || "FERREMAS"}
+                size={144}
+                level="M"
+                includeMargin
+                className="h-36 w-36"
+            />
         </div>
     )
 }
