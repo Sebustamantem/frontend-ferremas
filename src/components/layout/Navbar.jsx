@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext"
 import { useCart } from "../../context/CartContext"
 import CategoryBar from "./CategoryBar"
 import CartDrawer from "../cart/CartDrawer"
+import api from "../../api/axios"
 
 const Navbar = () => {
   const [isSearchOpen, SetIsSearchOpen] = useState(false)
@@ -12,6 +13,8 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [indicators, setIndicators] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
+  const [products, setProducts] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
   const navigate = useNavigate()
@@ -48,6 +51,13 @@ const Navbar = () => {
   }, [])
 
   useEffect(() => {
+    if (isStaff) return
+    api.get("/products")
+      .then((res) => setProducts(res.data || []))
+      .catch(() => setProducts([]))
+  }, [isStaff])
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setIsUserMenuOpen(false)
@@ -72,7 +82,67 @@ const Navbar = () => {
       return
     }
     navigate(`/productos?buscar=${encodeURIComponent(query)}`)
+    setShowSuggestions(false)
     SetIsSearchOpen(false)
+  }
+
+  const suggestions = searchTerm.trim()
+    ? products
+      .filter((product) => {
+        const query = searchTerm.trim().toLowerCase()
+        return product.name?.toLowerCase().includes(query)
+          || product.category?.toLowerCase().includes(query)
+          || product.description?.toLowerCase().includes(query)
+      })
+      .slice(0, 6)
+    : []
+
+  const handleSuggestionClick = (productId) => {
+    setShowSuggestions(false)
+    SetIsSearchOpen(false)
+    navigate(`/productos/${productId}`)
+  }
+
+  const SearchSuggestions = ({ mobile = false }) => {
+    if (!showSuggestions || !searchTerm.trim()) return null
+
+    return (
+      <div className={`${mobile ? "absolute left-4 right-14 top-14" : "absolute left-0 right-0 top-12"} bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[70]`}>
+        {suggestions.length === 0 ? (
+          <div className="px-4 py-3 text-sm text-gray-400">No hay productos sugeridos</div>
+        ) : (
+          <>
+            {suggestions.map((product) => (
+              <button
+                key={product.id}
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => handleSuggestionClick(product.id)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-orange-50 transition"
+              >
+                <div className="w-11 h-11 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-1.5" />
+                  ) : (
+                    <Search size={17} className="text-gray-300" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-800 truncate">{product.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{product.category || "Producto"} · ${Number(product.price || 0).toLocaleString("es-CL")}</p>
+                </div>
+              </button>
+            ))}
+            <button
+              type="submit"
+              className="w-full px-4 py-3 text-left text-sm font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 transition"
+            >
+              Ver todos los resultados para "{searchTerm.trim()}"
+            </button>
+          </>
+        )}
+      </div>
+    )
   }
 
   const formatCLP = (value) =>
@@ -133,11 +203,14 @@ const Navbar = () => {
                     placeholder="Buscar Producto..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
                     className="flex-1 px-5 text-sm outline-none text-gray-700" />
                   <button type="submit" className="px-4 text-orange-600 hover:text-orange-800 transition-colors cursor-pointer">
                     <Search size={20} />
                   </button>
                 </div>
+                <SearchSuggestions mobile />
                 <button type="button" onClick={() => SetIsSearchOpen(false)} className="ml-3 text-white cursor-pointer p-1">
                   <X size={28} />
                 </button>
@@ -156,16 +229,19 @@ const Navbar = () => {
             </div>
 
             {/* Centro - Buscador */}
-            <form onSubmit={handleSearch} className={`${isStaff ? "hidden" : "hidden sm:flex"} flex-1 max-w-2xl mx-6 bg-white rounded-full overflow-hidden h-11 shadow-sm`}>
+            <form onSubmit={handleSearch} className={`${isStaff ? "hidden" : "hidden sm:flex"} relative flex-1 max-w-2xl mx-6 bg-white rounded-full h-11 shadow-sm`}>
               <input
                 type="text"
                 placeholder="Buscar Productos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 px-5 text-sm outline-none text-gray-700" />
-              <button type="submit" className="px-5 bg-black text-white transition-colors cursor-pointer">
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                className="flex-1 px-5 text-sm outline-none text-gray-700 rounded-l-full" />
+              <button type="submit" className="px-5 bg-black text-white transition-colors cursor-pointer rounded-r-full">
                 <Search size={20} />
               </button>
+              <SearchSuggestions />
             </form>
 
             {/* Lado Derecho */}
