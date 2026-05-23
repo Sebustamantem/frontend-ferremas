@@ -4,6 +4,7 @@ import { register as registerService } from "../../api/authService"
 import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
 import { Eye, EyeOff, User, Mail, Lock, Phone, CreditCard, Briefcase, Building } from "lucide-react"
+import { formatRut, isRutLengthValid } from "../../utils/rut"
 
 const RegisterPro = () => {
     const [searchParams] = useSearchParams()
@@ -45,15 +46,6 @@ const RegisterPro = () => {
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-    const formatRut = (value) => {
-        const clean = value.replace(/[^0-9kK]/g, "")
-        if (clean.length <= 1) return clean
-        const body = clean.slice(0, -1)
-        const dv = clean.slice(-1).toUpperCase()
-        const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-        return `${formatted}-${dv}`
-    }
-
     const handleRutChange = (e) => setForm({ ...form, rut: formatRut(e.target.value) })
 
     const handlePhoneChange = (e) => {
@@ -76,6 +68,12 @@ const RegisterPro = () => {
 
         if (!form.phone.startsWith("9")) {
             setError("El celular debe comenzar con 9")
+            setLoading(false)
+            return
+        }
+
+        if (!isRutLengthValid(form.rut)) {
+            setError("Ingresa un RUT valido")
             setLoading(false)
             return
         }
@@ -141,7 +139,7 @@ const RegisterPro = () => {
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
-                            🔨 Maestro
+                            Maestro
                         </button>
                         <button
                             type="button"
@@ -151,17 +149,17 @@ const RegisterPro = () => {
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
-                            🏢 PYME
+                            PYME
                         </button>
                     </div>
 
                     {/* Beneficios */}
                     <div className="bg-orange-50 rounded-2xl p-4 mb-6">
-                        <p className="text-xs font-bold text-orange-600 mb-2">✨ Beneficios exclusivos:</p>
+                        <p className="text-xs font-bold text-orange-600 mb-2">Beneficios exclusivos:</p>
                         <ul className="text-xs text-orange-700 flex flex-col gap-1">
-                            <li>✅ 30% de descuento en tu primera compra</li>
-                            <li>✅ Acceso a FerreCredito (compra a cuotas)</li>
-                            <li>✅ Publica tus servicios en Ferremas</li>
+                            <li>30% de descuento en tu primera compra</li>
+                            <li>Acceso a FerreCredito (compra a cuotas)</li>
+                            <li>Publica tus servicios en Ferremas</li>
                         </ul>
                     </div>
 
@@ -236,6 +234,7 @@ const RegisterPro = () => {
                                 <CreditCard size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input type="text" name="rut" placeholder="12.345.678-9"
                                     value={form.rut} onChange={handleRutChange} required
+                                    maxLength={12}
                                     className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
                             </div>
                         </div>

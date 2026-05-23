@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { Plus, X } from "lucide-react"
 import api from "../../api/axios"
+import { formatRut, isRutLengthValid } from "../../utils/rut"
 
 const emptyForm = {
     name: "",
@@ -65,11 +66,21 @@ const AdminUsers = () => {
         setForm({ ...form, [event.target.name]: event.target.value })
     }
 
+    const handleRutChange = (event) => {
+        setForm({ ...form, rut: formatRut(event.target.value) })
+    }
+
     const handleCreateStaff = async (event) => {
         event.preventDefault()
         setSaving(true)
         setError("")
         setCreatedCredentials(null)
+
+        if (form.rut && !isRutLengthValid(form.rut)) {
+            setError("Ingresa un RUT valido")
+            setSaving(false)
+            return
+        }
 
         try {
             const payload = {
@@ -252,8 +263,9 @@ const AdminUsers = () => {
                             <input
                                 name="rut"
                                 value={form.rut}
-                                onChange={handleChange}
+                                onChange={handleRutChange}
                                 placeholder="RUT"
+                                maxLength={12}
                                 className="border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
                             />
                             <input

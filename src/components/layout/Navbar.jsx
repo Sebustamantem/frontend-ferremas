@@ -297,7 +297,7 @@ const Navbar = () => {
                           <p className="text-sm font-bold text-gray-800 truncate">{user.name}</p>
                           {["maestro", "pyme"].includes(user.user_type) && (
                             <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">
-                              {user.user_type === "maestro" ? "🔨 Maestro" : "🏢 PYME"}
+                              {user.user_type === "maestro" ? "Maestro" : "PYME"}
                             </span>
                           )}
                         </div>

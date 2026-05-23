@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom"
 import { register as registerService } from "../../api/authService"
 import { useAuth } from "../../context/AuthContext"
 import { Eye, EyeOff, User, Mail, Lock, Phone, CreditCard } from "lucide-react"
+import { formatRut, isRutLengthValid } from "../../utils/rut"
 
 const Register = () => {
     const [form, setForm] = useState({
@@ -15,15 +16,6 @@ const Register = () => {
     const navigate = useNavigate()
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
-
-    const formatRut = (value) => {
-        const clean = value.replace(/[^0-9kK]/g, "")
-        if (clean.length <= 1) return clean
-        const body = clean.slice(0, -1)
-        const dv = clean.slice(-1).toUpperCase()
-        const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-        return `${formatted}-${dv}`
-    }
 
     const handleRutChange = (e) => {
         const formatted = formatRut(e.target.value)
@@ -51,6 +43,9 @@ const Register = () => {
 
         if (!form.phone.startsWith("9"))
             return setError("El celular debe comenzar con 9"), setLoading(false)
+
+        if (!isRutLengthValid(form.rut))
+            return setError("Ingresa un RUT valido"), setLoading(false)
 
         const passwordError = validatePassword(form.password)
         if (passwordError) {
@@ -139,6 +134,7 @@ const Register = () => {
                                     <CreditCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" name="rut" placeholder="Ingresa un documento de identidad"
                                         value={form.rut} onChange={handleRutChange} required
+                                        maxLength={12}
                                         className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
                                 </div>
                             </div>
