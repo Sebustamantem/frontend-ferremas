@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { Package, ChevronRight } from "lucide-react"
+import { CheckCircle2, ChevronRight, Clock, Package, Truck, XCircle } from "lucide-react"
 import api from "../../api/axios"
 
 const formatDate = (value) => {
@@ -22,6 +22,20 @@ const statusLabels = {
     shipped: "Despachado",
     delivered: "Entregado",
     cancelled: "Cancelado",
+}
+
+const trackerSteps = [
+    { key: "preparation", label: "En preparacion", icon: Package },
+    { key: "shipped", label: "Enviado", icon: Truck },
+    { key: "delivered", label: "Entregado", icon: CheckCircle2 },
+]
+
+const getStepIndex = (status) => {
+    if (["pending", "transfer_pending"].includes(status)) return -1
+    if (["paid", "processing"].includes(status)) return 0
+    if (status === "shipped") return 1
+    if (status === "delivered") return 2
+    return -1
 }
 
 const OrderHistory = () => {
@@ -114,10 +128,69 @@ const OrderHistory = () => {
                                     </div>
                                 </div>
                             </div>
+                            <OrderTracker status={order.status} />
                         </div>
                     ))}
                 </div>
             )}
+        </div>
+    )
+}
+
+const OrderTracker = ({ status }) => {
+    if (status === "cancelled") {
+        return (
+            <div className="mt-5 flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                <XCircle size={18} />
+                Pedido cancelado
+            </div>
+        )
+    }
+
+    if (["pending", "transfer_pending"].includes(status)) {
+        return (
+            <div className="mt-5 flex items-center gap-2 rounded-xl bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
+                <Clock size={18} />
+                {status === "transfer_pending" ? "Esperando confirmacion de transferencia" : "Esperando confirmacion de pago"}
+            </div>
+        )
+    }
+
+    const currentStep = getStepIndex(status)
+
+    return (
+        <div className="mt-5">
+            <div className="grid grid-cols-3 gap-2">
+                {trackerSteps.map((step, index) => {
+                    const Icon = step.icon
+                    const isDone = index < currentStep
+                    const isCurrent = index === currentStep
+                    const isActive = index <= currentStep
+
+                    return (
+                        <div key={step.key} className="flex flex-col items-center text-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${isActive
+                                ? "bg-orange-500 border-orange-500 text-white"
+                                : "bg-gray-50 border-gray-200 text-gray-300"
+                                }`}>
+                                <Icon size={18} />
+                            </div>
+                            <p className={`mt-2 text-xs font-semibold ${isActive ? "text-gray-800" : "text-gray-400"}`}>
+                                {step.label}
+                            </p>
+                            <p className={`text-[11px] ${isCurrent ? "text-orange-600" : isDone ? "text-green-600" : "text-gray-300"}`}>
+                                {isCurrent ? "Actual" : isDone ? "Completado" : "Pendiente"}
+                            </p>
+                        </div>
+                    )
+                })}
+            </div>
+            <div className="mt-4 h-2 rounded-full bg-gray-100 overflow-hidden">
+                <div
+                    className="h-full bg-orange-500 transition-all"
+                    style={{ width: `${currentStep <= 0 ? 33 : currentStep === 1 ? 66 : 100}%` }}
+                />
+            </div>
         </div>
     )
 }

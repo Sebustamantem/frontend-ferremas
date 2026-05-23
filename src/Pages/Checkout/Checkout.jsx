@@ -17,7 +17,7 @@ const calculateEarnedPoints = (amount) => {
 
 const Checkout = () => {
     const { cart, removeFromCart, removeServiceFromCart, total, clearCart } = useCart()
-    const { user } = useAuth()
+    const { user, login } = useAuth()
     const navigate = useNavigate()
     const [payLoading, setPayLoading] = useState(false)
     const [payMethod, setPayMethod] = useState("transbank")
@@ -26,6 +26,7 @@ const Checkout = () => {
     const [myPoints, setMyPoints] = useState(0)
     const [pointsToUse, setPointsToUse] = useState(0)
     const [deliveryMethod, setDeliveryMethod] = useState("delivery")
+    const [saveAddress, setSaveAddress] = useState(false)
     const [address, setAddress] = useState({
         region: "", city: "", street: "", number: "", zip: "", phone: ""
     })
@@ -95,6 +96,8 @@ const Checkout = () => {
                         ...res.data.address,
                         phone: normalizePhone(res.data.address.phone || prev.phone),
                     }))
+                } else {
+                    setSaveAddress(true)
                 }
             })
             .catch(() => { })
@@ -113,6 +116,20 @@ const Checkout = () => {
         setPayLoading(true)
 
         try {
+            if (saveAddress) {
+                const res = await api.put("/users/me", {
+                    name: user.name,
+                    lastname: user.lastname || "",
+                    email: user.email,
+                    phone: user.phone || address.phone,
+                    address,
+                    user_type: user.user_type,
+                    business_name: user.business_name,
+                    profession: user.profession,
+                })
+                login(res.data, localStorage.getItem("token"))
+            }
+
             if (payMethod === "transbank") {
                 const res = await api.post("/payment/create", { address, points_to_use: appliedPoints, delivery_method: deliveryMethod })
                 const form = document.createElement("form")
@@ -411,6 +428,19 @@ const Checkout = () => {
                                             onChange={(e) => setAddress({ ...address, phone: normalizePhone(e.target.value) })}
                                             className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
                                     </div>
+
+                                    <label className="flex items-start gap-3 rounded-xl border border-orange-100 bg-orange-50 px-4 py-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={saveAddress}
+                                            onChange={(e) => setSaveAddress(e.target.checked)}
+                                            className="mt-1 accent-orange-500"
+                                        />
+                                        <span>
+                                            <span className="block text-sm font-semibold text-gray-800">Guardar esta direccion para futuras compras</span>
+                                            <span className="block text-xs text-gray-500 mt-0.5">La proxima vez se completara automaticamente en el checkout.</span>
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
