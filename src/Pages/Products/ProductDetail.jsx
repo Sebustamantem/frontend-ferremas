@@ -242,19 +242,31 @@ const ProductDetail = () => {
 
                         <div className="mt-6 border-t border-gray-200 pt-5">
                             <h2 className="font-semibold text-sm">Entrega en Cerrillos</h2>
-                            <div className="mt-4 space-y-4 text-sm">
-                                <p className="flex gap-3">
-                                    <Store size={20} className="shrink-0" />
-                                    <span><span className="font-semibold">Stock disponible: {stock}</span><br /><span className="text-gray-500 text-xs">Unidades disponibles para comprar</span></span>
-                                </p>
-                                <p className="flex gap-3">
-                                    <Store size={20} className="shrink-0" />
-                                    <span><span className="font-semibold">Retiro en tienda</span><br /><span className="text-gray-500 text-xs">Disponible segun stock de sucursal</span></span>
-                                </p>
-                                <p className="flex gap-3">
-                                    <Truck size={20} className="shrink-0" />
-                                    <span><span className="font-semibold">Envio a domicilio</span><br /><span className="text-gray-500 text-xs">Despacho disponible para tu direccion</span></span>
-                                </p>
+                            <div className="mt-4 space-y-3 text-sm">
+                                <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                                    <p className="font-semibold text-gray-800">Stock disponible: {stock}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Unidades disponibles para comprar.</p>
+                                </div>
+                                <div className="flex gap-3 rounded-xl border border-orange-100 bg-orange-50 p-3">
+                                    <Store size={20} className="shrink-0 text-orange-600" />
+                                    <span>
+                                        <span className="font-semibold text-gray-800">Retiro en tienda</span>
+                                        <br />
+                                        <span className="text-gray-600 text-xs">
+                                            Este producto se prepara y se envia a la tienda seleccionada para retiro.
+                                        </span>
+                                    </span>
+                                </div>
+                                <div className="flex gap-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
+                                    <Truck size={20} className="shrink-0 text-blue-600" />
+                                    <span>
+                                        <span className="font-semibold text-gray-800">Envio a domicilio</span>
+                                        <br />
+                                        <span className="text-gray-600 text-xs">
+                                            Disponible para despacho directo a tu direccion durante el checkout.
+                                        </span>
+                                    </span>
+                                </div>
                                 <p className="flex gap-3">
                                     <ShieldCheck size={20} className="shrink-0" />
                                     <span>Compra protegida por Ferremas</span>
