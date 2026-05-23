@@ -17,14 +17,6 @@
 
 <body>
   <div id="root"></div>
-  <script>
-    (function () {
-      var path = window.location.pathname;
-      if (path !== "/" && !window.location.hash) {
-        window.location.replace("/#" + path + window.location.search);
-      }
-    })();
-  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
