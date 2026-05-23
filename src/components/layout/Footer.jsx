@@ -1,24 +1,5 @@
 import { Camera, Mail, MapPin, MessageCircle, Phone, Play, ShieldCheck } from "lucide-react"
 
-const footerGroups = [
-    {
-        title: "Servicio al Cliente",
-        links: ["Contactanos", "Medios de pago", "Cambios y devoluciones", "Tiendas y horarios", "Garantia legal", "Estado del pedido"],
-    },
-    {
-        title: "Mi Cuenta",
-        links: ["Registrate", "Cambiar contrasena", "Mis compras", "Favoritos", "FerreCredito", "Ayuda"],
-    },
-    {
-        title: "Nuestra Empresa",
-        links: ["Sobre Ferremas", "Venta empresa", "Transparencia comercial", "Trabaja con nosotros", "Proveedores", "Mapa del sitio"],
-    },
-    {
-        title: "Comunidad Ferremas",
-        links: ["Maestros y PYMEs", "Circulo de especialistas", "Consejos de construccion", "Guias de herramientas", "Servicios profesionales", "Ferremas Pro"],
-    },
-]
-
 const social = [
     { icon: MessageCircle, label: "Comunidad" },
     { icon: Camera, label: "Galeria" },
@@ -29,27 +10,6 @@ const social = [
 const Footer = () => {
     return (
         <footer className="bg-slate-900 text-white">
-            <div className="bg-slate-800">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-                        {footerGroups.map((group) => (
-                            <div key={group.title}>
-                                <h3 className="text-sm font-bold text-white">{group.title}</h3>
-                                <ul className="mt-5 space-y-3">
-                                    {group.links.map((link) => (
-                                        <li key={link}>
-                                            <button className="text-left text-xs text-slate-200 hover:text-orange-300 transition">
-                                                {link}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 border-b border-slate-700 pb-6">
                     <div className="flex items-center gap-3">
