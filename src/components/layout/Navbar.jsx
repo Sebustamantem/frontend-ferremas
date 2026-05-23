@@ -217,15 +217,15 @@ const Navbar = () => {
                           <>
                             <Link to="/admin/products" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition">
-                              ⚙️ Productos
+                              Productos
                             </Link>
                             <Link to="/admin/users" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition">
-                              👥 Usuarios
+                              Usuarios
                             </Link>
                             <Link to="/admin/credits" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-b border-gray-100">
-                              💳 FerreCredito
+                              FerreCredito
                             </Link>
                           </>
                         )}
@@ -234,18 +234,18 @@ const Navbar = () => {
                         {isProfessional && (
                           <Link to="/mi-credito" onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
-                            💳 Mi FerreCredito
+                            Mi FerreCredito
                           </Link>
                         )}
 
                         <Link to="/mis-pedidos" onClick={() => setIsUserMenuOpen(false)}
                           className={`${!isStoreUser ? "hidden" : "flex"} items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition`}>
-                          📦 Mis pedidos
+                          Mis pedidos
                         </Link>
 
                         <Link to="/perfil" onClick={() => setIsUserMenuOpen(false)}
                           className={`${!isStoreUser || isProfessional ? "hidden" : "flex"} items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition border-b border-gray-100`}>
-                          👤 Mi cuenta
+                          Mi cuenta
                         </Link>
 
                         {isProfessional && (
@@ -259,7 +259,7 @@ const Navbar = () => {
                           {user.role === "vendedor" && (
                             <Link to="/vendedor" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition border-b border-gray-100">
-                              🛒 Panel Vendedor
+                              Panel Vendedor
                             </Link>
                           )}
 
@@ -267,7 +267,7 @@ const Navbar = () => {
                           {user.role === "bodeguero" && (
                             <Link to="/bodeguero" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-green-600 hover:bg-green-50 transition border-b border-gray-100">
-                              📦 Panel Bodeguero
+                              Panel Bodeguero
                             </Link>
                           )}
 

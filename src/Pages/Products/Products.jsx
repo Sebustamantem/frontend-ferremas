@@ -152,7 +152,14 @@ const Products = () => {
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                         {filtered.map((p) => (
-                            <div key={p.id} className="bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition group border border-gray-100 min-w-0">
+                            <div
+                                key={p.id}
+                                onClick={() => navigate(`/productos/${p.id}`)}
+                                onKeyDown={(e) => e.key === "Enter" && navigate(`/productos/${p.id}`)}
+                                role="button"
+                                tabIndex={0}
+                                className="bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition group border border-gray-100 min-w-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            >
                                 <div className="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl bg-gray-50 h-36 sm:h-48">
                                     {p.image_url ? (
                                         <img src={p.image_url} alt={p.name}
@@ -161,7 +168,10 @@ const Products = () => {
                                         <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm">Sin imagen</div>
                                     )}
                                     <button
-                                        onClick={() => handleToggleFavorite(p.id)}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleToggleFavorite(p.id)
+                                        }}
                                         className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 bg-white rounded-full shadow transition ${favoriteIds.includes(p.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"}`}
                                         title={favoriteIds.includes(p.id) ? "Quitar de favoritos" : "Agregar a favoritos"}
                                     >
@@ -182,7 +192,12 @@ const Products = () => {
                                         <span className="text-base sm:text-lg font-bold text-gray-800">
                                             ${Number(p.price).toLocaleString("es-CL")}
                                         </span>
-                                        <button onClick={() => handleAddToCart(p.id)} disabled={p.stock === 0}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                handleAddToCart(p.id)
+                                            }}
+                                            disabled={p.stock === 0}
                                             className="flex items-center justify-center gap-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white text-xs px-3 py-2 rounded-xl transition w-full sm:w-auto">
                                             <ShoppingCart size={14} />
                                             {p.stock === 0 ? "Agotado" : "Agregar"}

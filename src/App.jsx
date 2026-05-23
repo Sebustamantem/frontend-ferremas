@@ -11,6 +11,7 @@ import VendedorPanel from "./Pages/Vendedor/VendedorPanel"
 import BodegueroPanel from "./Pages/Bodeguero/BodegueroPanel"
 import ContadorPanel from "./Pages/Contador/ContadorPanel"
 import Products from "./Pages/Products/Products"
+import ProductDetail from "./Pages/Products/ProductDetail"
 import Checkout from "./Pages/Checkout/Checkout"
 import Success from "./Pages/Checkout/Success"
 import Failure from "./Pages/Checkout/Failure"
@@ -89,6 +90,7 @@ function AppContent() {
           <Route path="/mi-credito" element={<CustomerRoute requireAuth><MyCredit /></CustomerRoute>} />
           <Route path="/mis-servicios" element={<ProtectedRoute><MyServices /></ProtectedRoute>} />
           <Route path="/productos" element={<CustomerRoute><Products /></CustomerRoute>} />
+          <Route path="/productos/:id" element={<CustomerRoute><ProductDetail /></CustomerRoute>} />
           <Route path="/checkout" element={<CustomerRoute requireAuth><Checkout /></CustomerRoute>} />
           <Route path="/checkout/success" element={<Success />} />
           <Route path="/checkout/failure" element={<Failure />} />

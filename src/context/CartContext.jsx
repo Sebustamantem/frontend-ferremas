@@ -23,11 +23,11 @@ export const CartProvider = ({ children }) => {
         }
     }
 
-    const addToCart = async (product_id) => {
+    const addToCart = async (product_id, quantity = 1) => {
         if (!user) return false
         try {
             setLoading(true)
-            await api.post("/cart", { product_id, quantity: 1 })
+            await api.post("/cart", { product_id, quantity })
             await fetchCart()
             return true
         } catch (err) {
