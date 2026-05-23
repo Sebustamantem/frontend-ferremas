@@ -101,6 +101,8 @@ const AdminUsers = () => {
     const roleColors = {
         admin: "bg-orange-100 text-orange-600",
         cliente: "bg-blue-100 text-blue-600",
+        maestro: "bg-orange-100 text-orange-600",
+        pyme: "bg-cyan-100 text-cyan-700",
         vendedor: "bg-purple-100 text-purple-600",
         bodeguero: "bg-green-100 text-green-600",
         contador: "bg-yellow-100 text-yellow-700",
@@ -173,6 +175,8 @@ const AdminUsers = () => {
                                                 >
                                                     {item.role === "admin" && <option value="admin" disabled>admin</option>}
                                                     <option value="cliente">cliente</option>
+                                                    <option value="maestro">maestro</option>
+                                                    <option value="pyme">pyme</option>
                                                     <option value="vendedor">vendedor</option>
                                                     <option value="bodeguero">bodeguero</option>
                                                     <option value="contador">contador</option>

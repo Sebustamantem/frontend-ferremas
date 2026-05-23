@@ -190,7 +190,7 @@ const AdminCredits = () => {
                                                             ? "bg-orange-100 text-orange-600"
                                                             : "bg-blue-100 text-blue-600"
                                                         }`}>
-                                                        {u.user_type === "maestro" ? "🔨 Maestro" : "🏢 PYME"}
+                                                        {getUserTypeLabel(u.user_type)}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 font-medium text-gray-800">

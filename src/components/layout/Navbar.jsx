@@ -16,6 +16,8 @@ const Navbar = () => {
   const navigate = useNavigate()
   const menuRef = useRef(null)
   const isStaff = ["admin", "vendedor", "bodeguero", "contador"].includes(user?.role)
+  const isProfessional = ["maestro", "pyme"].includes(user?.user_type) || ["maestro", "pyme"].includes(user?.role)
+  const isStoreUser = Boolean(user) && !isStaff
   const roleHomePath = user?.role === "admin"
     ? "/admin/dashboard"
     : user?.role === "vendedor"
@@ -151,7 +153,7 @@ const Navbar = () => {
                 <Search size={24} />
               </button>}
 
-              {!isStaff && <button className="hidden sm:block text-white cursor-pointer hover:scale-110 transition p-1">
+              {!isStaff && <button onClick={() => user ? navigate("/favoritos") : navigate("/login")} className="hidden sm:block text-white cursor-pointer hover:scale-110 transition p-1">
                 <Heart size={24} />
               </button>}
 
@@ -229,7 +231,7 @@ const Navbar = () => {
                         )}
 
                         {/* Links Maestro/PYME */}
-                        {user.role === "cliente" && ["maestro", "pyme"].includes(user.user_type) && (
+                        {isProfessional && (
                           <Link to="/mi-credito" onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">
                             💳 Mi FerreCredito
@@ -237,14 +239,21 @@ const Navbar = () => {
                         )}
 
                         <Link to="/mis-pedidos" onClick={() => setIsUserMenuOpen(false)}
-                          className={`${user.role !== "cliente" ? "hidden" : "flex"} items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition`}>
+                          className={`${!isStoreUser ? "hidden" : "flex"} items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition`}>
                           📦 Mis pedidos
                         </Link>
 
                         <Link to="/perfil" onClick={() => setIsUserMenuOpen(false)}
-                          className={`${user.role !== "cliente" ? "hidden" : "flex"} items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition border-b border-gray-100`}>
+                          className={`${!isStoreUser || isProfessional ? "hidden" : "flex"} items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition border-b border-gray-100`}>
                           👤 Mi cuenta
                         </Link>
+
+                        {isProfessional && (
+                          <Link to="/mis-servicios" onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center px-5 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-b border-gray-100">
+                            Panel profesional
+                          </Link>
+                        )}
 
                           {/* Links Vendedor */}
                           {user.role === "vendedor" && (

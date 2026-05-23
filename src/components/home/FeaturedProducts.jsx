@@ -8,6 +8,7 @@ import { useAuth } from "../../context/AuthContext"
 const FeaturedProducts = () => {
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
+    const [favoriteIds, setFavoriteIds] = useState([])
     const { addToCart } = useCart()
     const { user } = useAuth()
     const navigate = useNavigate()
@@ -26,9 +27,32 @@ const FeaturedProducts = () => {
         fetchProducts()
     }, [])
 
+    useEffect(() => {
+        if (!user) {
+            setFavoriteIds([])
+            return
+        }
+        api.get("/products/favorites/my")
+            .then((res) => setFavoriteIds(res.data.map((product) => product.id)))
+            .catch(() => setFavoriteIds([]))
+    }, [user])
+
     const handleAddToCart = async (productId) => {
         if (!user) { navigate("/login"); return }
         await addToCart(productId)
+    }
+
+    const handleToggleFavorite = async (productId) => {
+        if (!user) { navigate("/login"); return }
+        try {
+            const res = await api.post(`/products/${productId}/favorite`)
+            setFavoriteIds((prev) => res.data.is_favorite
+                ? [...new Set([...prev, productId])]
+                : prev.filter((id) => id !== productId)
+            )
+        } catch (err) {
+            alert(err.response?.data?.message || "No se pudo actualizar favorito")
+        }
     }
 
     if (loading) return (
@@ -61,8 +85,12 @@ const FeaturedProducts = () => {
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm">Sin imagen</div>
                             )}
-                            <button className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 bg-white rounded-full shadow hover:text-red-500 transition">
-                                <Heart size={16} />
+                            <button
+                                onClick={() => handleToggleFavorite(p.id)}
+                                className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 bg-white rounded-full shadow transition ${favoriteIds.includes(p.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"}`}
+                                title={favoriteIds.includes(p.id) ? "Quitar de favoritos" : "Agregar a favoritos"}
+                            >
+                                <Heart size={16} fill={favoriteIds.includes(p.id) ? "currentColor" : "none"} />
                             </button>
                             {p.stock === 0 && (
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-t-2xl">

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useCart } from "../../context/CartContext"
 import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, Briefcase, Coins, CreditCard, Landmark, ShoppingCart, Trash2 } from "lucide-react"
+import { ArrowLeft, Briefcase, Coins, CreditCard, Landmark, PackageCheck, ShoppingCart, Trash2, Truck } from "lucide-react"
 import api from "../../api/axios"
 import { regions } from "../../data/chileRegions"
 
@@ -25,6 +25,7 @@ const Checkout = () => {
     const [myCredit, setMyCredit] = useState(null)
     const [myPoints, setMyPoints] = useState(0)
     const [pointsToUse, setPointsToUse] = useState(0)
+    const [deliveryMethod, setDeliveryMethod] = useState("delivery")
     const [address, setAddress] = useState({
         region: "", city: "", street: "", number: "", zip: "", phone: ""
     })
@@ -47,7 +48,7 @@ const Checkout = () => {
         .reduce((acc, item) => acc + Number(item.price) * item.quantity, 0)
     const serviceTotal = serviceItems
         .reduce((acc, item) => acc + Number(item.price) * item.quantity, 0)
-    const shipping = productTotal > 0 && productTotal < 50000 ? 4990 : 0
+    const shipping = deliveryMethod === "delivery" && productTotal > 0 && productTotal < 50000 ? 4990 : 0
     const earnedPoints = calculateEarnedPoints(productTotal)
 
     // Calcular total con descuento primera compra
@@ -113,7 +114,7 @@ const Checkout = () => {
 
         try {
             if (payMethod === "transbank") {
-                const res = await api.post("/payment/create", { address, points_to_use: appliedPoints })
+                const res = await api.post("/payment/create", { address, points_to_use: appliedPoints, delivery_method: deliveryMethod })
                 const form = document.createElement("form")
                 form.method = "POST"
                 form.action = res.data.url
@@ -125,11 +126,11 @@ const Checkout = () => {
                 document.body.appendChild(form)
                 form.submit()
             } else if (payMethod === "transferencia") {
-                const res = await api.post("/payment/transfer", { address, points_to_use: appliedPoints })
+                const res = await api.post("/payment/transfer", { address, points_to_use: appliedPoints, delivery_method: deliveryMethod })
                 await clearCart()
                 navigate(`/checkout/success?order_id=${res.data.order_id}&method=transferencia`)
             } else {
-                const res = await api.post("/ferre-credit/pay", { installments, address, points_to_use: appliedPoints })
+                const res = await api.post("/ferre-credit/pay", { installments, address, points_to_use: appliedPoints, delivery_method: deliveryMethod })
                 await clearCart()
                 navigate(`/checkout/success?order_id=${res.data.order_id}&method=ferrecredito`)
             }
@@ -226,6 +227,28 @@ const Checkout = () => {
                                             </button>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h2 className="font-bold text-gray-800 mb-4">Entrega</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition ${deliveryMethod === "delivery" ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}>
+                                        <input type="radio" name="deliveryMethod" checked={deliveryMethod === "delivery"} onChange={() => setDeliveryMethod("delivery")} className="mt-1 accent-orange-500" />
+                                        <Truck size={22} className="text-orange-500 mt-0.5" />
+                                        <div>
+                                            <p className="font-semibold text-gray-800 text-sm">Despacho a domicilio</p>
+                                            <p className="text-xs text-gray-400 mt-1">Gratis sobre $50.000 en productos.</p>
+                                        </div>
+                                    </label>
+                                    <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition ${deliveryMethod === "pickup" ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"}`}>
+                                        <input type="radio" name="deliveryMethod" checked={deliveryMethod === "pickup"} onChange={() => setDeliveryMethod("pickup")} className="mt-1 accent-gray-900" />
+                                        <PackageCheck size={22} className="text-gray-700 mt-0.5" />
+                                        <div>
+                                            <p className="font-semibold text-gray-800 text-sm">Retiro en tienda</p>
+                                            <p className="text-xs text-gray-400 mt-1">Sin costo de despacho.</p>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
 
@@ -472,7 +495,7 @@ const Checkout = () => {
 
                                     <SummaryRow
                                         label="Despacho"
-                                        value={productTotal === 0 ? "No aplica" : shipping === 0 ? "Gratis" : `$${shipping.toLocaleString("es-CL")}`}
+                                        value={deliveryMethod === "pickup" ? "Retiro en tienda" : productTotal === 0 ? "No aplica" : shipping === 0 ? "Gratis" : `$${shipping.toLocaleString("es-CL")}`}
                                         tone={shipping === 0 ? "green" : "default"}
                                     />
 
@@ -509,7 +532,7 @@ const Checkout = () => {
                                     )}
                                 </div>
 
-                                {productTotal > 0 && productTotal < 50000 && (
+                                {deliveryMethod === "delivery" && productTotal > 0 && productTotal < 50000 && (
                                     <div className="bg-orange-50 text-orange-600 text-xs p-3 rounded-xl mb-4 text-center">
                                         Agrega ${(50000 - productTotal).toLocaleString("es-CL")} mas en productos para despacho gratis.
                                     </div>

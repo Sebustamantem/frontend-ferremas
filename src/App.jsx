@@ -20,6 +20,7 @@ import MyCredit from "./Pages/Pro/MyCredit"
 import MyServices from "./Pages/Pro/MyServices"
 import OrderHistory from "./Pages/Orders/OrderHistory"
 import Profile from "./Pages/Profile/Profile"
+import Favorites from "./Pages/Favorites/Favorites"
 import ChangeInitialPassword from "./Pages/Auth/ChangeInitialPassword"
 import Navbar from "./components/layout/Navbar"
 import { useAuth } from "./context/AuthContext"
@@ -93,6 +94,7 @@ function AppContent() {
           <Route path="/checkout/failure" element={<Failure />} />
           <Route path="/checkout/pending" element={<Pending />} />
           <Route path="/mis-pedidos" element={<CustomerRoute requireAuth><OrderHistory /></CustomerRoute>} />
+          <Route path="/favoritos" element={<CustomerRoute requireAuth><Favorites /></CustomerRoute>} />
           <Route path="/perfil" element={<CustomerRoute requireAuth><Profile /></CustomerRoute>} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
