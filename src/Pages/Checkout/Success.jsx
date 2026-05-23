@@ -12,6 +12,13 @@ const Success = () => {
     const orderId = searchParams.get("order_id")
     const method = searchParams.get("method")
     const isTransfer = method === "transferencia"
+    const receiptCode = order ? `FERREMAS-${String(order.id).padStart(6, "0")}` : ""
+    const receiptPayload = order
+        ? `Ferremas|Pedido:${order.id}|Codigo:${receiptCode}|Total:${Number(order.total || 0)}|Estado:${order.status}`
+        : ""
+    const qrUrl = receiptPayload
+        ? `https://chart.googleapis.com/chart?cht=qr&chs=180x180&chl=${encodeURIComponent(receiptPayload)}`
+        : ""
 
     useEffect(() => {
         if (orderId) {
@@ -87,6 +94,21 @@ const Success = () => {
                                 <span>-{Number(order.points_used).toLocaleString("es-CL")}</span>
                             </div>
                         )}
+
+                        <div className="mt-4 rounded-2xl border border-orange-100 bg-white p-4 text-center">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Comprobante digital</p>
+                            <p className="mt-1 text-lg font-bold text-gray-900">{receiptCode}</p>
+                            <div className="mt-3 flex justify-center">
+                                <img
+                                    src={qrUrl}
+                                    alt={`QR comprobante ${receiptCode}`}
+                                    className="h-36 w-36 rounded-xl border border-gray-100 bg-white p-2"
+                                />
+                            </div>
+                            <p className="mt-3 text-xs text-gray-500">
+                                Presenta este codigo para retiro en tienda o seguimiento del pedido.
+                            </p>
+                        </div>
                     </div>
                 )}
 
