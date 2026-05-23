@@ -53,6 +53,7 @@ const ProductDetail = () => {
     const [reviewData, setReviewData] = useState(emptyReviewData)
 
     useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" })
         const fetchProduct = async () => {
             try {
                 const res = await api.get(`/products/${id}`)
@@ -219,7 +220,7 @@ const ProductDetail = () => {
                             <button
                                 onClick={handleAddToCart}
                                 disabled={stock === 0}
-                                className="h-10 flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold rounded px-5 flex items-center justify-center gap-2"
+                                className="h-10 flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white font-bold rounded px-5 flex items-center justify-center gap-2"
                             >
                                 <ShoppingCart size={18} />
                                 {stock === 0 ? "Sin stock" : "Agregar al carro"}

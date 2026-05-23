@@ -24,6 +24,7 @@ import Profile from "./Pages/Profile/Profile"
 import Favorites from "./Pages/Favorites/Favorites"
 import ChangeInitialPassword from "./Pages/Auth/ChangeInitialPassword"
 import Navbar from "./components/layout/Navbar"
+import Footer from "./components/layout/Footer"
 import { useAuth } from "./context/AuthContext"
 
 const ProtectedRoute = ({ children }) => {
@@ -107,6 +108,7 @@ function AppContent() {
           <Route path="/contador" element={<RoleRoute roles={["admin", "contador"]}><ContadorPanel /></RoleRoute>} />
         </Routes>
       </main>
+      {!isStaff && <Footer />}
     </div>
   )
 }

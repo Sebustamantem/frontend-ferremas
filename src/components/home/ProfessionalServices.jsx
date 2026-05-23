@@ -40,22 +40,22 @@ const ProfessionalServices = () => {
     }
 
     return (
-        <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-10">
-            <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6">
+        <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-12 sm:py-16">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 sm:mb-10">
                 <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Productos y servicios de Maestros/PYMEs</h2>
-                    <p className="text-gray-400 text-sm mt-1">Agrega una asesoria al carrito por $5.000 y recibe los datos de contacto al pagar.</p>
+                    <p className="text-gray-500 text-sm mt-2 max-w-2xl">Agrega una asesoria al carrito por $5.000 y recibe los datos de contacto al pagar junto con tus productos Ferremas.</p>
                 </div>
                 <button
                     onClick={publishAction}
-                    className="text-orange-500 text-sm font-semibold hover:underline"
+                    className="self-start text-orange-600 text-sm font-semibold hover:underline"
                 >
                     {canPublish ? "Publicar servicio" : "Postular para publicar"}
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-10">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                     <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
                         <ShoppingBag size={20} />
                     </div>
@@ -64,7 +64,7 @@ const ProfessionalServices = () => {
                         El cliente puede comprar materiales y sumar una asesoria profesional como un item adicional.
                     </p>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                     <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
                         <Briefcase size={20} />
                     </div>
@@ -73,7 +73,7 @@ const ProfessionalServices = () => {
                         Ferremas cobra solo la confirmacion de contacto. El servicio final se paga directo al maestro/PYME.
                     </p>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                     <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
                         <Mail size={20} />
                     </div>
@@ -98,26 +98,26 @@ const ProfessionalServices = () => {
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {services.map((service) => (
-                        <article key={service.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                        <article key={service.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 flex flex-col min-h-[330px]">
                             <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
                                 <Briefcase size={20} />
                             </div>
                             <p className="text-xs text-orange-500 font-semibold">{service.category || "Servicio"}</p>
                             <h3 className="text-lg font-bold text-gray-900 mt-1">{service.title}</h3>
-                            <p className="text-sm text-gray-500 mt-2 line-clamp-3">{service.description}</p>
-                            <div className="flex flex-wrap gap-3 text-xs text-gray-400 mt-4">
+                            <p className="text-sm text-gray-500 mt-3 leading-6 line-clamp-3 min-h-[72px]">{service.description}</p>
+                            <div className="flex flex-wrap gap-3 text-xs text-gray-400 mt-5 pt-4 border-t border-gray-100">
                                 {service.city && <span className="inline-flex items-center gap-1"><MapPin size={13} />{service.city}</span>}
                                 {service.phone && <span className="inline-flex items-center gap-1"><Phone size={13} />{service.phone}</span>}
                                 {service.email && <span className="inline-flex items-center gap-1"><Mail size={13} />Correo al pagar</span>}
                             </div>
-                            <div className="mt-4 rounded-lg bg-orange-50 border border-orange-100 px-3 py-2 text-xs text-orange-700">
+                            <div className="mt-5 rounded-lg bg-orange-50 border border-orange-100 px-4 py-3 text-xs leading-5 text-orange-700">
                                 El servicio final se acuerda y paga directo con el maestro/PYME.
                             </div>
                             <button
                                 onClick={() => handleContact(service.id)}
-                                className="w-full mt-5 bg-gray-900 text-white rounded-xl py-3 text-sm font-semibold hover:bg-gray-800 transition"
+                                className="w-full mt-auto bg-orange-500 text-white rounded-xl py-3 text-sm font-semibold hover:bg-orange-600 transition"
                             >
                                 Solicitar contacto $5.000
                             </button>
