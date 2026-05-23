@@ -42,6 +42,8 @@ const Checkout = () => {
 
     const selectedRegion = regions.find((region) => region.name === address.region)
     const isPro = ["maestro", "pyme"].includes(user?.user_type)
+    const canUseFerreCredit = isPro || myCredit?.is_active
+    const professionalLabel = user?.user_type?.includes("maestro") ? "maestros" : "PYMEs"
     const isAddressComplete = address.region && address.city && address.street && address.phone
     const productItems = cart.filter((item) => item.item_type !== "service")
     const serviceItems = cart.filter((item) => item.item_type === "service")
@@ -53,7 +55,7 @@ const Checkout = () => {
     const earnedPoints = calculateEarnedPoints(productTotal)
 
     // Calcular total con descuento primera compra
-    const discountedTotal = isPro && !user?.first_purchase_used
+    const discountedTotal = canUseFerreCredit && !user?.first_purchase_used
         ? Math.round(total * 0.7)
         : total
     const maxPointsToUse = Math.min(myPoints, discountedTotal + shipping)
@@ -67,12 +69,10 @@ const Checkout = () => {
         api.get("/points/my")
             .then(res => setMyPoints(Number(res.data.balance || 0)))
             .catch(() => setMyPoints(0))
-        if (isPro) {
-            api.get("/ferre-credit/my")
-                .then(res => setMyCredit(res.data))
-                .catch(err => console.error(err))
-        }
-    }, [isPro])
+        api.get("/ferre-credit/my")
+            .then(res => setMyCredit(res.data))
+            .catch(err => console.error(err))
+    }, [])
 
     useEffect(() => {
         if (!user) return
@@ -123,7 +123,6 @@ const Checkout = () => {
                     email: user.email,
                     phone: user.phone || address.phone,
                     address,
-                    user_type: user.user_type,
                     business_name: user.business_name,
                     profession: user.profession,
                 })
@@ -189,12 +188,12 @@ const Checkout = () => {
                         <div className="lg:col-span-2 flex flex-col gap-4">
 
                             {/* Descuento primera compra */}
-                            {isPro && !user?.first_purchase_used && (
+                            {canUseFerreCredit && !user?.first_purchase_used && (
                                 <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
                                     <span className="text-2xl">🎉</span>
                                     <div>
                                         <p className="text-sm font-bold text-green-700">¡30% de descuento en tu primera compra!</p>
-                                        <p className="text-xs text-green-600">Beneficio exclusivo para {user.user_type === "maestro" ? "maestros" : "PYMEs"}</p>
+                                        <p className="text-xs text-green-600">Beneficio exclusivo para {professionalLabel}</p>
                                     </div>
                                 </div>
                             )}
@@ -303,7 +302,7 @@ const Checkout = () => {
                                     </label>
 
                                     {/* FerreCredito solo para maestros/PYMEs */}
-                                    {isPro && (
+                                    {canUseFerreCredit && (
                                         <label className={`flex flex-col gap-3 p-4 rounded-xl border-2 cursor-pointer transition ${payMethod === "ferrecredito" ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"
                                             } ${!myCredit?.is_active ? "opacity-50 cursor-not-allowed" : ""}`}>
                                             <div className="flex items-center gap-4">
@@ -486,7 +485,7 @@ const Checkout = () => {
                                         />
                                     )}
 
-                                    {isPro && !user?.first_purchase_used && (
+                                    {canUseFerreCredit && !user?.first_purchase_used && (
                                         <SummaryRow
                                             label="Descuento primera compra"
                                             value={`-$${(total - discountedTotal).toLocaleString("es-CL")}`}
