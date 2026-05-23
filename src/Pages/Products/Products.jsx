@@ -35,6 +35,7 @@ const Products = () => {
 
     useEffect(() => {
         setActiveCategory(getCategoryFromParam(searchParams.get("categoria")))
+        setSearch(searchParams.get("buscar") || "")
     }, [searchParams])
 
     useEffect(() => {
@@ -67,7 +68,14 @@ const Products = () => {
         if (activeCategory !== "Todas") {
             result = result.filter((p) => normalizeCategory(p.category) === normalizeCategory(activeCategory))
         }
-        if (search.trim()) result = result.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+        if (search.trim()) {
+            const query = search.toLowerCase()
+            result = result.filter((p) =>
+                p.name?.toLowerCase().includes(query)
+                || p.description?.toLowerCase().includes(query)
+                || p.category?.toLowerCase().includes(query)
+            )
+        }
         if (sortBy === "price_asc") result.sort((a, b) => a.price - b.price)
         if (sortBy === "price_desc") result.sort((a, b) => b.price - a.price)
         if (sortBy === "newest") result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -94,11 +102,21 @@ const Products = () => {
 
     const handleCategoryChange = (category) => {
         setActiveCategory(category)
+        const nextParams = {}
+        if (search.trim()) nextParams.buscar = search.trim()
         if (category === "Todas") {
-            setSearchParams({})
+            setSearchParams(nextParams)
             return
         }
-        setSearchParams({ categoria: normalizeCategory(category) })
+        setSearchParams({ ...nextParams, categoria: normalizeCategory(category) })
+    }
+
+    const handleSearchChange = (value) => {
+        setSearch(value)
+        const nextParams = {}
+        if (value.trim()) nextParams.buscar = value.trim()
+        if (activeCategory !== "Todas") nextParams.categoria = normalizeCategory(activeCategory)
+        setSearchParams(nextParams)
     }
 
     return (
@@ -114,7 +132,7 @@ const Products = () => {
                     <div className="relative flex-1">
                         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input type="text" placeholder="Buscar productos..."
-                            value={search} onChange={(e) => setSearch(e.target.value)}
+                            value={search} onChange={(e) => handleSearchChange(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
                     </div>
                     <div className="flex items-center gap-2">

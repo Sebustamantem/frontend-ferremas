@@ -11,6 +11,7 @@ const Navbar = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [indicators, setIndicators] = useState({})
+  const [searchTerm, setSearchTerm] = useState("")
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
   const navigate = useNavigate()
@@ -60,6 +61,18 @@ const Navbar = () => {
     logout()
     setIsUserMenuOpen(false)
     navigate("/")
+  }
+
+  const handleSearch = (event) => {
+    event.preventDefault()
+    const query = searchTerm.trim()
+    if (!query) {
+      navigate("/productos")
+      SetIsSearchOpen(false)
+      return
+    }
+    navigate(`/productos?buscar=${encodeURIComponent(query)}`)
+    SetIsSearchOpen(false)
   }
 
   const formatCLP = (value) =>
@@ -112,18 +125,23 @@ const Navbar = () => {
 
             {/* Modo Búsqueda Móvil */}
             {!isStaff && isSearchOpen && (
-              <div className="absolute inset-0 z-50 bg-orange-600 flex items-center px-4 sm:hidden">
+              <form onSubmit={handleSearch} className="absolute inset-0 z-50 bg-orange-600 flex items-center px-4 sm:hidden">
                 <div className="flex-1 flex items-center bg-white rounded-full overflow-hidden h-11 shadow-sm">
-                  <input type="text" autoFocus placeholder="Buscar Producto..."
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Buscar Producto..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="flex-1 px-5 text-sm outline-none text-gray-700" />
-                  <button className="px-4 text-orange-600 hover:text-orange-800 transition-colors cursor-pointer">
+                  <button type="submit" className="px-4 text-orange-600 hover:text-orange-800 transition-colors cursor-pointer">
                     <Search size={20} />
                   </button>
                 </div>
-                <button onClick={() => SetIsSearchOpen(false)} className="ml-3 text-white cursor-pointer p-1">
+                <button type="button" onClick={() => SetIsSearchOpen(false)} className="ml-3 text-white cursor-pointer p-1">
                   <X size={28} />
                 </button>
-              </div>
+              </form>
             )}
 
             {/* Lado Izquierdo */}
@@ -138,13 +156,17 @@ const Navbar = () => {
             </div>
 
             {/* Centro - Buscador */}
-            <div className={`${isStaff ? "hidden" : "hidden sm:flex"} flex-1 max-w-2xl mx-6 bg-white rounded-full overflow-hidden h-11 shadow-sm`}>
-              <input type="text" placeholder="Buscar Productos..."
+            <form onSubmit={handleSearch} className={`${isStaff ? "hidden" : "hidden sm:flex"} flex-1 max-w-2xl mx-6 bg-white rounded-full overflow-hidden h-11 shadow-sm`}>
+              <input
+                type="text"
+                placeholder="Buscar Productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="flex-1 px-5 text-sm outline-none text-gray-700" />
-              <button className="px-5 bg-black text-white transition-colors cursor-pointer">
+              <button type="submit" className="px-5 bg-black text-white transition-colors cursor-pointer">
                 <Search size={20} />
               </button>
-            </div>
+            </form>
 
             {/* Lado Derecho */}
             <div className="flex items-center gap-3">
