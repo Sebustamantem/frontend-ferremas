@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import {
-    BadgeCheck,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
     Heart,
     Minus,
-    PackageCheck,
     Plus,
-    RotateCcw,
     ShieldCheck,
     ShoppingCart,
     Star,
@@ -22,21 +19,22 @@ import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
 import { useCart } from "../../context/CartContext"
 
-const reviews = [
-    { title: "Firme", author: "Patricio Riquelme", text: "Adecuado tamano", age: "hace 1 mes" },
-    { title: "Es la que necesitaba", author: "Carolin", text: "Se ve igual a la foto, ademas se siente muy firme y segura.", age: "hace 5 meses" },
-    { title: "PERFECTA PARA MIS EXPECTATIVAS", author: "ELENA", text: "Es liviana, facil de transportar y ocupa poco espacio para guardarla.", age: "hace 1 ano" },
-    { title: "Excelente", author: "Glenis guacaran", text: "Es justo lo que estaba buscando.", age: "hace 1 ano" },
-    { title: "Buena calidad", author: "Alicia", text: "Buen producto, cumple con lo esperado.", age: "hace 2 anos" },
-    { title: "100% funcional", author: "Patricia", text: "De buena calidad, la foto es precisa.", age: "hace 2 anos" },
-]
+const emptyReviewData = {
+    total: 0,
+    average_rating: 0,
+    distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+    reviews: [],
+}
 
 const formatPrice = (value) => `$${Number(value || 0).toLocaleString("es-CL")}`
+const formatDate = (value) => value
+    ? new Date(value).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" })
+    : ""
 
-const Stars = ({ size = 15 }) => (
+const Stars = ({ size = 15, rating = 0 }) => (
     <div className="flex items-center text-amber-400">
         {[1, 2, 3, 4, 5].map((star) => (
-            <Star key={star} size={size} fill="currentColor" strokeWidth={1.5} />
+            <Star key={star} size={size} fill={star <= Math.round(rating) ? "currentColor" : "none"} strokeWidth={1.5} />
         ))}
     </div>
 )
@@ -52,6 +50,7 @@ const ProductDetail = () => {
     const [selectedImage, setSelectedImage] = useState(0)
     const [isFavorite, setIsFavorite] = useState(false)
     const [message, setMessage] = useState("")
+    const [reviewData, setReviewData] = useState(emptyReviewData)
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -68,6 +67,12 @@ const ProductDetail = () => {
     }, [id])
 
     useEffect(() => {
+        api.get(`/products/${id}/reviews`)
+            .then((res) => setReviewData(res.data))
+            .catch(() => setReviewData(emptyReviewData))
+    }, [id])
+
+    useEffect(() => {
         if (!user) return
         api.get("/products/favorites/my")
             .then((res) => setIsFavorite(res.data.some((item) => Number(item.id) === Number(id))))
@@ -79,9 +84,10 @@ const ProductDetail = () => {
         return [product.image_url, product.image_url, product.image_url, product.image_url]
     }, [product])
 
-    const discountPrice = Math.round(Number(product?.price || 0) * 1.18)
     const stock = Number(product?.stock || 0)
     const maxQuantity = Math.max(stock, 1)
+    const averageRating = Number(reviewData.average_rating || 0)
+    const reviewTotal = Number(reviewData.total || 0)
 
     const handleAddToCart = async () => {
         if (!user) {
@@ -180,26 +186,16 @@ const ProductDetail = () => {
                     <aside>
                         <p className="text-sm text-gray-500 uppercase tracking-wide">{product.category || "FERREMAS"}</p>
                         <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 mt-1">{product.name}</h1>
-                        <p className="text-xs text-gray-600 mt-3">
-                            Vendido por <span className="font-semibold underline">Ferremas</span> <BadgeCheck size={13} className="inline text-slate-500" />
-                        </p>
 
                         <div className="flex items-center gap-3 mt-3">
-                            <Stars />
-                            <a href="#opiniones" className="text-sm text-slate-600 underline">4.6 (21)</a>
+                            <Stars rating={averageRating} />
+                            <a href="#opiniones" className="text-sm text-slate-600 underline">
+                                {reviewTotal > 0 ? `${averageRating.toFixed(1)} (${reviewTotal})` : "Sin opiniones"}
+                            </a>
                         </div>
 
                         <div className="mt-7">
-                            <div className="flex items-center gap-2">
-                                <p className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</p>
-                                <span className="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded">-15%</span>
-                            </div>
-                            <p className="text-sm text-gray-400 line-through">{formatPrice(discountPrice)}</p>
-                        </div>
-
-                        <div className="mt-5 text-xs text-green-700">
-                            <span className="bg-green-600 text-white px-1 mr-1 rounded-sm">CMR</span>
-                            Ahorra comprando sobre $50.000
+                            <p className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</p>
                         </div>
 
                         <div className="mt-6 flex items-center gap-3">
@@ -239,25 +235,24 @@ const ProductDetail = () => {
                         {message && <p className="text-sm text-green-700 mt-3">{message}</p>}
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7 text-sm text-gray-700">
-                            <p><span className="font-bold">• Tipo:</span> {product.category || "General"}</p>
-                            <p><span className="font-bold">• Material:</span> Alta resistencia</p>
+                            <p><span className="font-bold">Tipo:</span> {product.category || "General"}</p>
+                            <p><span className="font-bold">Codigo:</span> {product.id}</p>
                         </div>
 
-                        <div className="mt-6 space-y-4 text-sm border-b border-gray-200 pb-5">
-                            <p className="flex items-center gap-3"><RotateCcw size={18} /> Este producto tiene <span className="underline">derecho a retracto</span></p>
-                            <p className="flex items-center gap-3 text-gray-500"><PackageCheck size={18} /> Cod. del producto: {product.id}</p>
-                        </div>
-
-                        <div className="mt-5">
+                        <div className="mt-6 border-t border-gray-200 pt-5">
                             <h2 className="font-semibold text-sm">Entrega en Cerrillos</h2>
                             <div className="mt-4 space-y-4 text-sm">
                                 <p className="flex gap-3">
                                     <Store size={20} className="shrink-0" />
-                                    <span><span className="font-semibold">Stock disponible: {stock}</span><br /><span className="text-gray-500 text-xs">Selecciona ubicacion, Metropolitana de Santiago</span></span>
+                                    <span><span className="font-semibold">Stock disponible: {stock}</span><br /><span className="text-gray-500 text-xs">Unidades disponibles para comprar</span></span>
+                                </p>
+                                <p className="flex gap-3">
+                                    <Store size={20} className="shrink-0" />
+                                    <span><span className="font-semibold">Retiro en tienda</span><br /><span className="text-gray-500 text-xs">Disponible segun stock de sucursal</span></span>
                                 </p>
                                 <p className="flex gap-3">
                                     <Truck size={20} className="shrink-0" />
-                                    <span><span className="underline">Envio a domicilio</span> <span className="text-green-700 bg-green-100 text-xs px-1 py-0.5 rounded">Llega manana</span></span>
+                                    <span><span className="font-semibold">Envio a domicilio</span><br /><span className="text-gray-500 text-xs">Despacho disponible para tu direccion</span></span>
                                 </p>
                                 <p className="flex gap-3">
                                     <ShieldCheck size={20} className="shrink-0" />
@@ -279,13 +274,12 @@ const ProductDetail = () => {
                     </div>
 
                     <div className="border border-gray-200 rounded-lg p-5 text-center">
-                        <p className="text-xs text-gray-500">Vendido por <span className="font-bold underline text-gray-900">Ferremas</span></p>
-                        <p className="text-green-700 text-sm font-semibold mt-2">Recomendado por clientes</p>
-                        <div className="flex justify-center mt-2"><Stars /></div>
+                        <p className="text-green-700 text-sm font-semibold">Recomendado por clientes</p>
+                        <div className="flex justify-center mt-2"><Stars rating={averageRating} /></div>
                         <div className="grid grid-cols-3 gap-3 mt-5 text-[11px] text-gray-600">
-                            <span>Entrega a tiempo</span>
-                            <span>Cumple sus entregas</span>
-                            <span>Buen servicio</span>
+                            <span>Retiro en tienda</span>
+                            <span>Envio disponible</span>
+                            <span>Compra protegida</span>
                         </div>
                     </div>
                 </section>
@@ -294,56 +288,65 @@ const ProductDetail = () => {
                     <h2 className="text-lg font-semibold border-b border-slate-700 pb-3">Opiniones de este producto</h2>
                     <div className="mt-7 flex flex-col sm:flex-row gap-8 sm:items-center">
                         <div className="text-center w-36">
-                            <p className="text-4xl font-light">4.6<span className="text-lg">/5</span></p>
-                            <div className="flex justify-center mt-2"><Stars /></div>
-                            <p className="text-xs mt-1">21 comentarios</p>
+                            <p className="text-4xl font-light">{averageRating.toFixed(1)}<span className="text-lg">/5</span></p>
+                            <div className="flex justify-center mt-2"><Stars rating={averageRating} /></div>
+                            <p className="text-xs mt-1">{reviewTotal} comentarios</p>
                         </div>
-                        <div className="space-y-2 text-xs min-w-[220px]">
-                            {[15, 5, 0, 1, 0].map((count, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                    <span>{5 - index}★</span>
-                                    <div className="w-36 h-1.5 bg-gray-200">
-                                        <div className="h-full bg-slate-600" style={{ width: `${Math.max((count / 15) * 100, count ? 8 : 0)}%` }} />
+                        <div className="space-y-2 text-xs min-w-[240px]">
+                            {[5, 4, 3, 2, 1].map((rating) => {
+                                const count = Number(reviewData.distribution?.[rating] || 0)
+                                return (
+                                    <div key={rating} className="flex items-center gap-2">
+                                        <span className="w-20">{rating} estrellas</span>
+                                        <div className="w-36 h-1.5 bg-gray-200">
+                                            <div className="h-full bg-slate-600" style={{ width: `${reviewTotal ? (count / reviewTotal) * 100 : 0}%` }} />
+                                        </div>
+                                        <span className="text-slate-500">{count}</span>
                                     </div>
-                                    <span className="text-slate-500">{count}</span>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
 
                     <div className="mt-8 flex items-center gap-3 text-sm">
                         <span>Ordenar por:</span>
                         <select className="border-b border-gray-300 py-2 pr-8 focus:outline-none">
-                            <option>Mejores evaluaciones</option>
                             <option>Mas recientes</option>
+                            <option>Mejores evaluaciones</option>
                         </select>
                     </div>
 
-                    <div className="mt-7 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                        {reviews.map((review) => (
-                            <article key={`${review.title}-${review.author}`} className="border border-gray-200 rounded-lg p-4 shadow-sm min-h-32">
-                                <div className="flex justify-between gap-3">
-                                    <div>
-                                        <h3 className="font-bold text-sm">{review.title}</h3>
-                                        <p className="text-xs">por {review.author}</p>
+                    {reviewData.reviews.length === 0 ? (
+                        <div className="mt-7 border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
+                            Todavia no hay opiniones para este producto.
+                        </div>
+                    ) : (
+                        <div className="mt-7 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                            {reviewData.reviews.map((review) => (
+                                <article key={review.id} className="border border-gray-200 rounded-lg p-4 shadow-sm min-h-32">
+                                    <div className="flex justify-between gap-3">
+                                        <div>
+                                            <h3 className="font-bold text-sm">{review.comment ? "Opinion verificada" : "Compra verificada"}</h3>
+                                            <p className="text-xs">por {`${review.user_name || "Cliente"} ${review.user_lastname || ""}`.trim()}</p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <Stars size={13} rating={review.rating} />
+                                            <p className="text-[11px] text-gray-500">{formatDate(review.created_at)}</p>
+                                        </div>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <Stars size={13} />
-                                        <p className="text-[11px] text-gray-500">{review.age}</p>
+                                    <p className="mt-4 text-sm">{review.comment || "Sin comentario escrito."}</p>
+                                    <div className="flex gap-2 mt-4">
+                                        <button className="w-9 h-8 border border-gray-300 rounded flex items-center justify-center text-slate-600" title="Util">
+                                            <ThumbsUp size={14} />
+                                        </button>
+                                        <button className="w-9 h-8 border border-gray-300 rounded flex items-center justify-center text-slate-600" title="No util">
+                                            <ThumbsDown size={14} />
+                                        </button>
                                     </div>
-                                </div>
-                                <p className="mt-4 text-sm">{review.text}</p>
-                                <div className="flex gap-2 mt-4">
-                                    <button className="w-9 h-8 border border-gray-300 rounded flex items-center justify-center text-slate-600" title="Util">
-                                        <ThumbsUp size={14} />
-                                    </button>
-                                    <button className="w-9 h-8 border border-gray-300 rounded flex items-center justify-center text-slate-600" title="No util">
-                                        <ThumbsDown size={14} />
-                                    </button>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
                 </section>
             </div>
         </div>
