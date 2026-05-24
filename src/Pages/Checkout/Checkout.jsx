@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useCart } from "../../context/CartContext"
 import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, Briefcase, Coins, CreditCard, Landmark, PackageCheck, ShoppingCart, Trash2, Truck } from "lucide-react"
+import { ArrowLeft, Briefcase, Building2, Coins, CreditCard, Home, Landmark, MapPin, PackageCheck, Phone, ShoppingCart, Trash2, Truck, UserRound } from "lucide-react"
 import api from "../../api/axios"
 import { regions } from "../../data/chileRegions"
 
@@ -27,12 +27,21 @@ const Checkout = () => {
     const [pointsToUse, setPointsToUse] = useState(0)
     const [deliveryMethod, setDeliveryMethod] = useState("delivery")
     const [saveAddress, setSaveAddress] = useState(false)
+    const [addressTouched, setAddressTouched] = useState(false)
     const [address, setAddress] = useState({
-        region: "", city: "", street: "", number: "", zip: "", phone: ""
+        receiver: "",
+        region: "",
+        city: "",
+        street: "",
+        number: "",
+        apartment: "",
+        zip: "",
+        reference: "",
+        phone: "",
     })
 
     const normalizePhone = (value) => {
-        const digits = value.replace(/\D/g, "")
+        const digits = String(value || "").replace(/\D/g, "")
         if (!digits) return ""
         if (digits.startsWith("569")) return `+${digits}`
         if (digits.startsWith("56")) return `+${digits}`
@@ -40,11 +49,45 @@ const Checkout = () => {
         return `+569${digits}`
     }
 
+    const updateAddress = (field, value) => {
+        setAddressTouched(true)
+        setAddress((prev) => ({ ...prev, [field]: value }))
+    }
+
+    const cleanAddress = {
+        receiver: address.receiver.trim() || `${user?.name || ""} ${user?.lastname || ""}`.trim(),
+        region: address.region,
+        city: address.city,
+        street: address.street.trim(),
+        number: address.number.trim(),
+        apartment: address.apartment.trim(),
+        zip: address.zip.trim(),
+        reference: address.reference.trim(),
+        phone: normalizePhone(address.phone),
+    }
+    const phoneDigits = cleanAddress.phone.replace(/\D/g, "")
+    const isValidPhone = phoneDigits.length === 11 && phoneDigits.startsWith("569")
     const selectedRegion = regions.find((region) => region.name === address.region)
     const isPro = ["maestro", "pyme"].includes(user?.user_type)
     const canUseFerreCredit = isPro || myCredit?.is_active
     const professionalLabel = user?.user_type?.includes("maestro") ? "maestros" : "PYMEs"
-    const isAddressComplete = address.region && address.city && address.street && address.phone
+    const isDeliveryAddressComplete = Boolean(
+        cleanAddress.receiver &&
+        cleanAddress.region &&
+        cleanAddress.city &&
+        cleanAddress.street &&
+        cleanAddress.number &&
+        isValidPhone
+    )
+    const canContinueCheckout = deliveryMethod === "pickup"
+        ? Boolean(cleanAddress.receiver && isValidPhone)
+        : isDeliveryAddressComplete
+    const showAddressErrors = addressTouched || payLoading
+    const addressSummary = deliveryMethod === "pickup"
+        ? "Retiro en tienda"
+        : [cleanAddress.street && `${cleanAddress.street} ${cleanAddress.number}`, cleanAddress.apartment, cleanAddress.city, cleanAddress.region]
+            .filter(Boolean)
+            .join(", ")
     const productItems = cart.filter((item) => item.item_type !== "service")
     const serviceItems = cart.filter((item) => item.item_type === "service")
     const productTotal = productItems
@@ -78,25 +121,44 @@ const Checkout = () => {
         if (!user) return
         let userAddress = null
         if (user.address) {
-            userAddress = typeof user.address === "object" ? user.address : JSON.parse(user.address)
+            try {
+                userAddress = typeof user.address === "object" ? user.address : JSON.parse(user.address)
+            } catch {
+                userAddress = null
+            }
         }
+        const receiver = `${user.name || ""} ${user.lastname || ""}`.trim()
         if (userAddress) {
             setAddress((prev) => ({
                 ...prev,
                 ...userAddress,
-                phone: normalizePhone(userAddress.phone || prev.phone),
+                receiver: userAddress.receiver || receiver,
+                apartment: userAddress.apartment || userAddress.department || "",
+                reference: userAddress.reference || "",
+                phone: normalizePhone(userAddress.phone || user.phone || prev.phone),
             }))
             return
         }
         api.get("/users/me")
             .then((res) => {
-                if (res.data.address) {
+                const savedAddress = res.data.address && typeof res.data.address === "object"
+                    ? res.data.address
+                    : res.data.address ? JSON.parse(res.data.address) : null
+                if (savedAddress) {
                     setAddress((prev) => ({
                         ...prev,
-                        ...res.data.address,
-                        phone: normalizePhone(res.data.address.phone || prev.phone),
+                        ...savedAddress,
+                        receiver: savedAddress.receiver || receiver,
+                        apartment: savedAddress.apartment || savedAddress.department || "",
+                        reference: savedAddress.reference || "",
+                        phone: normalizePhone(savedAddress.phone || res.data.phone || prev.phone),
                     }))
                 } else {
+                    setAddress((prev) => ({
+                        ...prev,
+                        receiver,
+                        phone: normalizePhone(res.data.phone || prev.phone),
+                    }))
                     setSaveAddress(true)
                 }
             })
@@ -109,7 +171,8 @@ const Checkout = () => {
     }
 
     const handlePay = async () => {
-        if (!isAddressComplete) {
+        setAddressTouched(true)
+        if (!canContinueCheckout) {
             alert("Por favor completa todos los campos de dirección")
             return
         }
@@ -121,8 +184,8 @@ const Checkout = () => {
                     name: user.name,
                     lastname: user.lastname || "",
                     email: user.email,
-                    phone: user.phone || address.phone,
-                    address,
+                    phone: user.phone || cleanAddress.phone,
+                    address: cleanAddress,
                     business_name: user.business_name,
                     profession: user.profession,
                 })
@@ -130,7 +193,7 @@ const Checkout = () => {
             }
 
             if (payMethod === "transbank") {
-                const res = await api.post("/payment/create", { address, points_to_use: appliedPoints, delivery_method: deliveryMethod })
+                const res = await api.post("/payment/create", { address: cleanAddress, points_to_use: appliedPoints, delivery_method: deliveryMethod })
                 const form = document.createElement("form")
                 form.method = "POST"
                 form.action = res.data.url
@@ -142,11 +205,11 @@ const Checkout = () => {
                 document.body.appendChild(form)
                 form.submit()
             } else if (payMethod === "transferencia") {
-                const res = await api.post("/payment/transfer", { address, points_to_use: appliedPoints, delivery_method: deliveryMethod })
+                const res = await api.post("/payment/transfer", { address: cleanAddress, points_to_use: appliedPoints, delivery_method: deliveryMethod })
                 await clearCart()
                 navigate(`/checkout/success?order_id=${res.data.order_id}&method=transferencia`)
             } else {
-                const res = await api.post("/ferre-credit/pay", { installments, address, points_to_use: appliedPoints, delivery_method: deliveryMethod })
+                const res = await api.post("/ferre-credit/pay", { installments, address: cleanAddress, points_to_use: appliedPoints, delivery_method: deliveryMethod })
                 await clearCart()
                 navigate(`/checkout/success?order_id=${res.data.order_id}&method=ferrecredito`)
             }
@@ -367,66 +430,122 @@ const Checkout = () => {
                                     </div>
                                 </div>
 
-                                <h2 className="font-bold text-gray-800 mb-4">Dirección de Envío</h2>
+                                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                    <div>
+                                        <h2 className="font-bold text-gray-800">Direccion de entrega</h2>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            {deliveryMethod === "pickup"
+                                                ? "Usaremos estos datos para identificar tu retiro."
+                                                : "Completa los datos para despacho y contacto."}
+                                        </p>
+                                    </div>
+                                    {addressSummary && (
+                                        <div className="rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-500 sm:max-w-xs">
+                                            <span className="font-semibold text-gray-700">Resumen: </span>{addressSummary}
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="flex flex-col gap-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="flex flex-col gap-1">
-                                            <label className="text-xs text-gray-500 font-medium">Región</label>
-                                            <select value={address.region}
-                                                onChange={(e) => setAddress({ ...address, region: e.target.value, city: "" })}
-                                                className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50">
-                                                <option value="">Selecciona región</option>
-                                                {regions.map((region) => (
-                                                    <option key={region.name} value={region.name}>{region.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <label className="text-xs text-gray-500 font-medium">Comuna</label>
-                                            <select value={address.city}
-                                                onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                                                disabled={!selectedRegion}
-                                                className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100">
-                                                <option value="">Selecciona comuna</option>
-                                                {selectedRegion?.communes.map((commune) => (
-                                                    <option key={commune} value={commune}>{commune}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                        <label className="text-xs text-gray-500 font-medium">Dirección</label>
-                                        <input type="text" placeholder="Ej: Av. Providencia 1234"
-                                            value={address.street}
-                                            onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                                            className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="flex flex-col gap-1">
-                                            <label className="text-xs text-gray-500 font-medium">Número / Depto</label>
-                                            <input type="text" placeholder="Ej: Depto 301"
-                                                value={address.number}
-                                                onChange={(e) => setAddress({ ...address, number: e.target.value })}
-                                                className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <label className="text-xs text-gray-500 font-medium">Código Postal</label>
-                                            <input type="text" placeholder="Ej: 7500000"
-                                                value={address.zip}
-                                                onChange={(e) => setAddress({ ...address, zip: e.target.value })}
-                                                className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                        <label className="text-xs text-gray-500 font-medium">Teléfono de contacto</label>
-                                        <input type="tel" placeholder="+569 1234 5678"
+                                        <CheckoutField
+                                            icon={UserRound}
+                                            label="Persona que recibe"
+                                            placeholder="Ej: Sebastian Bustamante"
+                                            value={address.receiver}
+                                            onChange={(value) => updateAddress("receiver", value)}
+                                            error={showAddressErrors && !cleanAddress.receiver ? "Ingresa un nombre de contacto." : ""}
+                                        />
+                                        <CheckoutField
+                                            icon={Phone}
+                                            label="Telefono de contacto"
+                                            placeholder="+569 1234 5678"
                                             value={address.phone}
-                                            onChange={(e) => setAddress({ ...address, phone: normalizePhone(e.target.value) })}
-                                            className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
+                                            onChange={(value) => updateAddress("phone", normalizePhone(value))}
+                                            error={showAddressErrors && !isValidPhone ? "Usa un celular chileno valido. Ej: +56912345678." : ""}
+                                        />
                                     </div>
+
+                                    {deliveryMethod === "delivery" && (
+                                        <>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-xs text-gray-500 font-medium">Region</label>
+                                                    <select value={address.region}
+                                                        onChange={(e) => {
+                                                            setAddressTouched(true)
+                                                            setAddress({ ...address, region: e.target.value, city: "" })
+                                                        }}
+                                                        className={`border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50 ${showAddressErrors && !address.region ? "border-red-200 bg-red-50" : "border-gray-200"}`}>
+                                                        <option value="">Selecciona region</option>
+                                                        {regions.map((region) => (
+                                                            <option key={region.name} value={region.name}>{region.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    {showAddressErrors && !address.region && <p className="text-xs text-red-500">Selecciona una region.</p>}
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-xs text-gray-500 font-medium">Comuna</label>
+                                                    <select value={address.city}
+                                                        onChange={(e) => updateAddress("city", e.target.value)}
+                                                        disabled={!selectedRegion}
+                                                        className={`border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100 ${showAddressErrors && !address.city ? "border-red-200 bg-red-50" : "border-gray-200"}`}>
+                                                        <option value="">Selecciona comuna</option>
+                                                        {selectedRegion?.communes.map((commune) => (
+                                                            <option key={commune} value={commune}>{commune}</option>
+                                                        ))}
+                                                    </select>
+                                                    {showAddressErrors && !address.city && <p className="text-xs text-red-500">Selecciona una comuna.</p>}
+                                                </div>
+                                            </div>
+
+                                            <CheckoutField
+                                                icon={Home}
+                                                label="Calle o avenida"
+                                                placeholder="Ej: Av. Providencia"
+                                                value={address.street}
+                                                onChange={(value) => updateAddress("street", value)}
+                                                error={showAddressErrors && !cleanAddress.street ? "Ingresa la calle o avenida." : ""}
+                                            />
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <CheckoutField
+                                                    icon={MapPin}
+                                                    label="Numero"
+                                                    placeholder="Ej: 1234"
+                                                    value={address.number}
+                                                    onChange={(value) => updateAddress("number", value)}
+                                                    error={showAddressErrors && !cleanAddress.number ? "Ingresa el numero." : ""}
+                                                />
+                                                <CheckoutField
+                                                    icon={Building2}
+                                                    label="Depto, casa o local"
+                                                    placeholder="Ej: Depto 301"
+                                                    value={address.apartment}
+                                                    onChange={(value) => updateAddress("apartment", value)}
+                                                    optional
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <CheckoutField
+                                                    icon={MapPin}
+                                                    label="Codigo postal"
+                                                    placeholder="Ej: 7500000"
+                                                    value={address.zip}
+                                                    onChange={(value) => updateAddress("zip", value.replace(/\D/g, "").slice(0, 7))}
+                                                    optional
+                                                />
+                                                <CheckoutField
+                                                    icon={Truck}
+                                                    label="Referencia para el repartidor"
+                                                    placeholder="Ej: Porton negro, llamar al llegar"
+                                                    value={address.reference}
+                                                    onChange={(value) => updateAddress("reference", value)}
+                                                    optional
+                                                />
+                                            </div>
+                                        </>
+                                    )}
 
                                     <label className="flex items-start gap-3 rounded-xl border border-orange-100 bg-orange-50 px-4 py-3 cursor-pointer">
                                         <input
@@ -569,7 +688,7 @@ const Checkout = () => {
 
                                 <button
                                     onClick={handlePay}
-                                    disabled={!isAddressComplete || payLoading}
+                                    disabled={!canContinueCheckout || payLoading}
                                     className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white py-4 rounded-xl font-bold text-lg transition shadow-md flex items-center justify-center gap-2"
                                 >
                                     {payMethod === "transbank" ? <CreditCard size={20} /> : <Landmark size={20} />}
@@ -582,9 +701,9 @@ const Checkout = () => {
                                                 : "Pagar con FerreCredito"}
                                 </button>
 
-                                {!isAddressComplete && (
+                                {!canContinueCheckout && (
                                     <p className="text-xs text-red-400 text-center mt-2">
-                                        Completa la dirección para continuar
+                                        {deliveryMethod === "pickup" ? "Completa nombre y telefono de contacto" : "Completa la direccion para continuar"}
                                     </p>
                                 )}
 
@@ -615,5 +734,24 @@ const SummaryRow = ({ label, value, tone = "default" }) => {
         </div>
     )
 }
+
+const CheckoutField = ({ icon: Icon, label, value, onChange, placeholder, error = "", optional = false }) => (
+    <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+            <label className="text-xs text-gray-500 font-medium">{label}</label>
+            {optional && <span className="text-[11px] text-gray-400">Opcional</span>}
+        </div>
+        <div className={`flex items-center gap-2 rounded-xl border bg-gray-50 px-3 py-2.5 focus-within:ring-2 focus-within:ring-orange-500 ${error ? "border-red-200 bg-red-50" : "border-gray-200"}`}>
+            {Icon && <Icon size={18} className={error ? "text-red-400" : "text-gray-400"} />}
+            <input
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder={placeholder}
+                className="min-w-0 flex-1 bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
+            />
+        </div>
+        {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+)
 
 export default Checkout
