@@ -114,15 +114,15 @@ const ProductDetail = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen brand-page flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
             </div>
         )
     }
 
     if (!product) {
         return (
-            <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 text-center">
+            <div className="min-h-screen brand-page flex flex-col items-center justify-center px-4 text-center">
                 <h1 className="text-2xl font-bold text-gray-900">Producto no encontrado</h1>
                 <Link to="/productos" className="mt-4 text-orange-600 font-semibold">Volver a productos</Link>
             </div>
@@ -130,7 +130,7 @@ const ProductDetail = () => {
     }
 
     return (
-        <div className="min-h-screen bg-white text-gray-900">
+        <div className="min-h-screen brand-page text-gray-900">
             <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
                 <nav className="text-xs text-gray-500 mb-5 flex flex-wrap gap-1">
                     <Link to="/" className="hover:text-orange-600">Home</Link>
@@ -157,7 +157,7 @@ const ProductDetail = () => {
                             )}
                         </div>
 
-                        <div className="order-1 sm:order-2 relative min-h-[360px] sm:min-h-[520px] border border-gray-200 bg-white flex items-center justify-center">
+                        <div className="order-1 sm:order-2 relative min-h-[360px] sm:min-h-[520px] border border-amber-100 bg-white/95 flex items-center justify-center rounded-2xl shadow-sm">
                             {gallery.length > 0 ? (
                                 <img src={gallery[selectedImage]} alt={product.name} className="max-h-[520px] w-full object-contain p-6 sm:p-10" />
                             ) : (
@@ -220,7 +220,7 @@ const ProductDetail = () => {
                             <button
                                 onClick={handleAddToCart}
                                 disabled={stock === 0}
-                                className="h-10 flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white font-bold rounded px-5 flex items-center justify-center gap-2"
+                                className="h-10 flex-1 brand-button disabled:bg-none disabled:bg-gray-300 font-bold rounded px-5 flex items-center justify-center gap-2"
                             >
                                 <ShoppingCart size={18} />
                                 {stock === 0 ? "Sin stock" : "Agregar al carro"}

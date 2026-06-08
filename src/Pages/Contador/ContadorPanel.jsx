@@ -31,6 +31,8 @@ const ContadorPanel = () => {
     const [loading, setLoading] = useState(true)
     const [updatingId, setUpdatingId] = useState(null)
     const [error, setError] = useState("")
+    const [notice, setNotice] = useState(null)
+    const [actionDraft, setActionDraft] = useState(null)
 
     useEffect(() => {
         if (!user) return
@@ -55,13 +57,20 @@ const ContadorPanel = () => {
     }
 
     const updateOrder = async (orderId, action, confirmText) => {
-        if (!confirm(confirmText)) return
+        setActionDraft({ orderId, action, confirmText })
+    }
+
+    const confirmUpdateOrder = async () => {
+        if (!actionDraft) return
+        const { orderId, action } = actionDraft
         setUpdatingId(orderId)
         try {
             await api.put(`/staff/accounting/orders/${orderId}/${action}`)
+            setNotice({ type: "success", message: "Pedido actualizado correctamente." })
+            setActionDraft(null)
             await fetchOrders()
         } catch (err) {
-            alert(err.response?.data?.message || "No se pudo actualizar el pedido")
+            setNotice({ type: "error", message: err.response?.data?.message || "No se pudo actualizar el pedido" })
         } finally {
             setUpdatingId(null)
         }
@@ -108,6 +117,18 @@ const ContadorPanel = () => {
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-6">
                         {error}
+                    </div>
+                )}
+
+                {notice && (
+                    <div className={`rounded-lg px-4 py-3 text-sm mb-6 border ${notice.type === "success"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <span>{notice.message}</span>
+                            <button type="button" onClick={() => setNotice(null)} className="font-bold">Cerrar</button>
+                        </div>
                     </div>
                 )}
 
@@ -163,6 +184,23 @@ const ContadorPanel = () => {
                     </div>
                 )}
             </div>
+
+            {actionDraft && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900">Actualizar pedido #{actionDraft.orderId}</h2>
+                        <p className="text-sm text-gray-500 mt-2">{actionDraft.confirmText}</p>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button type="button" onClick={() => setActionDraft(null)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600">
+                                Cancelar
+                            </button>
+                            <button type="button" onClick={confirmUpdateOrder} className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600">
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -1,6 +1,6 @@
 import { createElement, useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { AlertTriangle, Check, Package, RefreshCw, Save, Truck, X } from "lucide-react"
+import { AlertTriangle, Check, MessageSquareWarning, Package, RefreshCw, Truck, X } from "lucide-react"
 import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
 
@@ -34,10 +34,11 @@ const BodegueroPanel = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
-    const [editingStockId, setEditingStockId] = useState(null)
-    const [stockValue, setStockValue] = useState("")
-    const [savingStockId, setSavingStockId] = useState(null)
+    const [reportingProductId, setReportingProductId] = useState(null)
     const [updatingOrderId, setUpdatingOrderId] = useState(null)
+    const [notice, setNotice] = useState(null)
+    const [reportDraft, setReportDraft] = useState(null)
+    const [orderActionDraft, setOrderActionDraft] = useState(null)
 
     useEffect(() => {
         if (!user) return
@@ -65,46 +66,38 @@ const BodegueroPanel = () => {
         }
     }
 
-    const startStockEdit = (product) => {
-        setEditingStockId(product.id)
-        setStockValue(String(product.stock ?? 0))
-    }
-
-    const cancelStockEdit = () => {
-        setEditingStockId(null)
-        setStockValue("")
-    }
-
-    const handleUpdateStock = async (productId) => {
-        const stock = Number(stockValue)
-        if (!Number.isInteger(stock) || stock < 0) {
-            alert("Ingresa un stock valido")
-            return
-        }
-
-        setSavingStockId(productId)
+    const handleReportStockIssue = async () => {
+        if (!reportDraft) return
+        setReportingProductId(reportDraft.product.id)
         try {
-            await api.put(`/staff/inventory/${productId}/stock`, { stock })
-            cancelStockEdit()
+            await api.post(`/staff/inventory/${reportDraft.product.id}/report`, { reason: reportDraft.reason })
+            setNotice({ type: "success", message: "Aviso enviado al admin." })
+            setReportDraft(null)
             await fetchData()
         } catch (err) {
-            alert(err.response?.data?.message || "Error al actualizar stock")
+            setNotice({ type: "error", message: err.response?.data?.message || "Error al informar stock" })
         } finally {
-            setSavingStockId(null)
+            setReportingProductId(null)
         }
     }
 
     const handleWarehouseStatusChange = async (order) => {
         const action = warehouseActions[order.status]
         if (!action) return
-        if (!confirm(action.confirm)) return
+        setOrderActionDraft({ order, action })
+    }
 
+    const confirmWarehouseStatusChange = async () => {
+        if (!orderActionDraft) return
+        const { order, action } = orderActionDraft
         setUpdatingOrderId(order.id)
         try {
             await api.put(`/staff/warehouse/orders/${order.id}/status`, { status: action.nextStatus })
+            setNotice({ type: "success", message: "Pedido actualizado correctamente." })
+            setOrderActionDraft(null)
             await fetchData()
         } catch (err) {
-            alert(err.response?.data?.message || "Error al actualizar el pedido")
+            setNotice({ type: "error", message: err.response?.data?.message || "Error al actualizar el pedido" })
         } finally {
             setUpdatingOrderId(null)
         }
@@ -174,18 +167,28 @@ const BodegueroPanel = () => {
                     </div>
                 )}
 
+                {notice && (
+                    <div className={`rounded-lg px-4 py-3 text-sm mb-6 border ${notice.type === "success"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <span>{notice.message}</span>
+                            <button type="button" onClick={() => setNotice(null)} className="font-bold">Cerrar</button>
+                        </div>
+                    </div>
+                )}
+
                 {loading ? (
                     <LoadingState />
                 ) : activeTab === "inventory" ? (
                     <InventoryTable
                         products={inventory}
-                        editingStockId={editingStockId}
-                        stockValue={stockValue}
-                        savingStockId={savingStockId}
-                        onStockValueChange={setStockValue}
-                        onStartEdit={startStockEdit}
-                        onCancelEdit={cancelStockEdit}
-                        onSaveStock={handleUpdateStock}
+                        reportingProductId={reportingProductId}
+                        onReportStockIssue={(product) => setReportDraft({
+                            product,
+                            reason: "Producto no disponible / sin stock",
+                        })}
                     />
                 ) : (
                     <DispatchTable
@@ -195,6 +198,47 @@ const BodegueroPanel = () => {
                     />
                 )}
             </div>
+
+            {reportDraft && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                        <h2 className="text-lg font-bold text-gray-900">Informar al admin</h2>
+                        <p className="text-sm text-gray-500 mt-1">{reportDraft.product.name}</p>
+                        <label className="block text-xs font-semibold text-gray-500 mt-5 mb-2">Motivo</label>
+                        <textarea
+                            value={reportDraft.reason}
+                            onChange={(event) => setReportDraft({ ...reportDraft, reason: event.target.value })}
+                            rows={4}
+                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                        <div className="flex justify-end gap-2 mt-5">
+                            <button type="button" onClick={() => setReportDraft(null)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600">
+                                Cancelar
+                            </button>
+                            <button type="button" onClick={handleReportStockIssue} className="px-4 py-2 rounded-xl bg-yellow-500 text-white text-sm font-semibold hover:bg-yellow-600">
+                                Enviar aviso
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {orderActionDraft && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900">Actualizar pedido #{orderActionDraft.order.id}</h2>
+                        <p className="text-sm text-gray-500 mt-2">{orderActionDraft.action.confirm}</p>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button type="button" onClick={() => setOrderActionDraft(null)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600">
+                                Cancelar
+                            </button>
+                            <button type="button" onClick={confirmWarehouseStatusChange} className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600">
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -242,13 +286,8 @@ const LoadingState = () => (
 
 const InventoryTable = ({
     products,
-    editingStockId,
-    stockValue,
-    savingStockId,
-    onStockValueChange,
-    onStartEdit,
-    onCancelEdit,
-    onSaveStock,
+    reportingProductId,
+    onReportStockIssue,
 }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
@@ -281,38 +320,19 @@ const InventoryTable = ({
                                 <StockBadge stock={Number(product.stock || 0)} />
                             </td>
                             <td className="px-6 py-4 text-center">
-                                {editingStockId === product.id ? (
-                                    <div className="flex items-center justify-center gap-2">
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={stockValue}
-                                            onChange={(event) => onStockValueChange(event.target.value)}
-                                            className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                        />
-                                        <button
-                                            onClick={() => onSaveStock(product.id)}
-                                            disabled={savingStockId === product.id}
-                                            className="inline-flex items-center justify-center w-9 h-9 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-60 transition"
-                                            title="Guardar stock"
-                                        >
-                                            <Save size={15} />
-                                        </button>
-                                        <button
-                                            onClick={onCancelEdit}
-                                            className="inline-flex items-center justify-center w-9 h-9 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition"
-                                            title="Cancelar"
-                                        >
-                                            <X size={15} />
-                                        </button>
-                                    </div>
-                                ) : (
+                                {Number(product.stock || 0) === 0 ? (
                                     <button
-                                        onClick={() => onStartEdit(product)}
-                                        className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-4 py-2 rounded-lg font-semibold transition"
+                                        onClick={() => onReportStockIssue(product)}
+                                        disabled={reportingProductId === product.id}
+                                        className="inline-flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-4 py-2 rounded-lg font-semibold transition disabled:opacity-60"
                                     >
-                                        Editar stock
+                                        <MessageSquareWarning size={14} />
+                                        {reportingProductId === product.id ? "Informando..." : "Informar al admin"}
                                     </button>
+                                ) : (
+                                    <span className="text-xs font-semibold text-green-600">
+                                        Disponible
+                                    </span>
                                 )}
                             </td>
                         </tr>

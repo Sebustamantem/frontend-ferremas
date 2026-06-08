@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom"
 import { Plus, X } from "lucide-react"
 import api from "../../api/axios"
 import { formatRut, isRutLengthValid } from "../../utils/rut"
+import { downloadCsv } from "../../utils/csv"
+import ExportMenu from "../../components/ui/ExportMenu"
 
 const emptyForm = {
     name: "",
@@ -31,6 +33,8 @@ const AdminUsers = () => {
     const [error, setError] = useState("")
     const [saving, setSaving] = useState(false)
     const [createdCredentials, setCreatedCredentials] = useState(null)
+    const [notice, setNotice] = useState(null)
+    const [roleDraft, setRoleDraft] = useState(null)
 
     useEffect(() => {
         if (!user || user.role !== "admin") {
@@ -52,13 +56,19 @@ const AdminUsers = () => {
         }
     }
 
-    const handleRoleChange = async (id, role) => {
-        if (!confirm(`Cambiar rol a "${role}"?`)) return
+    const handleRoleChange = (id, role) => {
+        setRoleDraft({ id, role })
+    }
+
+    const confirmRoleChange = async () => {
+        if (!roleDraft) return
         try {
-            await api.put(`/users/${id}/role`, { role })
+            await api.put(`/users/${roleDraft.id}/role`, { role: roleDraft.role })
+            setNotice({ type: "success", message: "Rol actualizado correctamente." })
+            setRoleDraft(null)
             fetchUsers()
         } catch (err) {
-            alert(err.response?.data?.message || "No se pudo cambiar el rol")
+            setNotice({ type: "error", message: err.response?.data?.message || "No se pudo cambiar el rol" })
         }
     }
 
@@ -119,6 +129,20 @@ const AdminUsers = () => {
         contador: "bg-yellow-100 text-yellow-700",
     }
 
+    const exportUsers = () => {
+        downloadCsv("ferremas-usuarios.csv", users.map((item) => ({
+            id: item.id,
+            nombre: item.name,
+            apellido: item.lastname || "",
+            email: item.email,
+            rut: item.rut || "",
+            telefono: item.phone || "",
+            rol: item.role,
+            tipo_usuario: item.user_type,
+            creado: item.created_at,
+        })))
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
             <div className="max-w-6xl mx-auto">
@@ -135,6 +159,11 @@ const AdminUsers = () => {
                             <Plus size={16} />
                             Nuevo usuario interno
                         </button>
+                        <ExportMenu
+                            items={[
+                                { label: "Usuarios", description: "Clientes, staff y roles", onClick: exportUsers },
+                            ]}
+                        />
                         <button
                             onClick={() => navigate("/admin/dashboard")}
                             className="text-sm text-orange-500 hover:underline font-medium px-3 py-2"
@@ -143,6 +172,18 @@ const AdminUsers = () => {
                         </button>
                     </div>
                 </div>
+
+                {notice && (
+                    <div className={`rounded-xl px-4 py-3 text-sm mb-6 border ${notice.type === "success"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <span>{notice.message}</span>
+                            <button type="button" onClick={() => setNotice(null)} className="font-bold">Cerrar</button>
+                        </div>
+                    </div>
+                )}
 
                 <div className="bg-white rounded-2xl shadow overflow-hidden">
                     {loading ? (
@@ -217,7 +258,7 @@ const AdminUsers = () => {
 
                         <h2 className="text-xl font-bold text-gray-900">Crear usuario interno</h2>
                         <p className="text-sm text-gray-500 mt-1">
-                            Crea cuentas para vendedor, bodeguero o contador. Se pedira cambiar la contrasena al primer ingreso.
+                            Crea cuentas para vendedor, bodeguero o contador. Se pedira cambiar la contraseña al primer ingreso.
                         </p>
 
                         {error && (
@@ -300,6 +341,23 @@ const AdminUsers = () => {
                                 {saving ? "Creando..." : "Crear usuario interno"}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {roleDraft && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900">Cambiar rol</h2>
+                        <p className="text-sm text-gray-500 mt-2">Cambiar rol a "{roleDraft.role}"?</p>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button type="button" onClick={() => setRoleDraft(null)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600">
+                                Cancelar
+                            </button>
+                            <button type="button" onClick={confirmRoleChange} className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600">
+                                Confirmar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

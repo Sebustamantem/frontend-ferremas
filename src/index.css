@@ -14,6 +14,44 @@ html {
   box-sizing: border-box;
 }
 
+.brand-gradient {
+  background: linear-gradient(135deg, #0f6b61 0%, #17233a 48%, #c43a0c 100%);
+}
+
+.brand-gradient-x {
+  background: linear-gradient(90deg, #0f6b61 0%, #17233a 52%, #c43a0c 100%);
+}
+
+.brand-page {
+  background:
+    radial-gradient(circle at top left, rgba(15, 107, 97, 0.12), transparent 34rem),
+    radial-gradient(circle at top right, rgba(196, 58, 12, 0.14), transparent 32rem),
+    linear-gradient(135deg, #f7fbf8 0%, #fff7ed 52%, #f8fafc 100%);
+}
+
+.brand-card {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(15, 107, 97, 0.14);
+}
+
+.brand-button {
+  background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+  color: #111827;
+}
+
+.brand-button:hover {
+  background: linear-gradient(135deg, #fcd34d 0%, #ea580c 100%);
+}
+
+.brand-button-dark {
+  background: linear-gradient(135deg, #0f6b61 0%, #17233a 55%, #c43a0c 100%);
+  color: #ffffff;
+}
+
+.brand-button-dark:hover {
+  background: linear-gradient(135deg, #0b5f57 0%, #111827 55%, #a8320b 100%);
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

@@ -1,31 +1,33 @@
+import { lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom"
-import Home from "./Pages/Home/Home"
-import Login from "./Pages/Login/Login"
-import Register from "./Pages/Register/Register"
-import RegisterPro from "./Pages/Register/RegisterPro"
-import AdminProducts from "./Pages/Admin/AdminProducts"
-import AdminDashboard from "./Pages/Admin/AdminDashboard"
-import AdminUsers from "./Pages/Admin/AdminUsers"
-import AdminCredits from "./Pages/Admin/AdminCredits"
-import VendedorPanel from "./Pages/Vendedor/VendedorPanel"
-import BodegueroPanel from "./Pages/Bodeguero/BodegueroPanel"
-import ContadorPanel from "./Pages/Contador/ContadorPanel"
-import Products from "./Pages/Products/Products"
-import ProductDetail from "./Pages/Products/ProductDetail"
-import Checkout from "./Pages/Checkout/Checkout"
-import Success from "./Pages/Checkout/Success"
-import Failure from "./Pages/Checkout/Failure"
-import Pending from "./Pages/Checkout/Pending"
-import Welcome from "./Pages/Pro/Welcome"
-import MyCredit from "./Pages/Pro/MyCredit"
-import MyServices from "./Pages/Pro/MyServices"
-import OrderHistory from "./Pages/Orders/OrderHistory"
-import Profile from "./Pages/Profile/Profile"
-import Favorites from "./Pages/Favorites/Favorites"
-import ChangeInitialPassword from "./Pages/Auth/ChangeInitialPassword"
 import Navbar from "./components/layout/Navbar"
 import Footer from "./components/layout/Footer"
 import { useAuth } from "./context/AuthContext"
+
+const Home = lazy(() => import("./Pages/Home/Home"))
+const Login = lazy(() => import("./Pages/Login/Login"))
+const Register = lazy(() => import("./Pages/Register/Register"))
+const RegisterPro = lazy(() => import("./Pages/Register/RegisterPro"))
+const AdminProducts = lazy(() => import("./Pages/Admin/AdminProducts"))
+const AdminDashboard = lazy(() => import("./Pages/Admin/AdminDashboard"))
+const AdminUsers = lazy(() => import("./Pages/Admin/AdminUsers"))
+const AdminCredits = lazy(() => import("./Pages/Admin/AdminCredits"))
+const VendedorPanel = lazy(() => import("./Pages/Vendedor/VendedorPanel"))
+const BodegueroPanel = lazy(() => import("./Pages/Bodeguero/BodegueroPanel"))
+const ContadorPanel = lazy(() => import("./Pages/Contador/ContadorPanel"))
+const Products = lazy(() => import("./Pages/Products/Products"))
+const ProductDetail = lazy(() => import("./Pages/Products/ProductDetail"))
+const Checkout = lazy(() => import("./Pages/Checkout/Checkout"))
+const Success = lazy(() => import("./Pages/Checkout/Success"))
+const Failure = lazy(() => import("./Pages/Checkout/Failure"))
+const Pending = lazy(() => import("./Pages/Checkout/Pending"))
+const Welcome = lazy(() => import("./Pages/Pro/Welcome"))
+const MyCredit = lazy(() => import("./Pages/Pro/MyCredit"))
+const MyServices = lazy(() => import("./Pages/Pro/MyServices"))
+const OrderHistory = lazy(() => import("./Pages/Orders/OrderHistory"))
+const Profile = lazy(() => import("./Pages/Profile/Profile"))
+const Favorites = lazy(() => import("./Pages/Favorites/Favorites"))
+const ChangeInitialPassword = lazy(() => import("./Pages/Auth/ChangeInitialPassword"))
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth()
@@ -77,10 +79,11 @@ function AppContent() {
   const mustChangePassword = user?.must_change_password && location.pathname !== "/cambiar-password"
 
   return (
-    <div>
+    <div className="min-h-screen brand-page">
       <Navbar />
       <main className={isStaff ? "pt-20 sm:pt-24" : "pt-32 sm:pt-44 md:pt-48"}>
         {mustChangePassword && <Navigate to="/cambiar-password" replace />}
+        <Suspense fallback={<RouteLoader />}>
         <Routes>
           <Route path="/" element={<HomeRoute />} />
           <Route path="/login" element={<Login />} />
@@ -107,11 +110,18 @@ function AppContent() {
           <Route path="/bodeguero" element={<RoleRoute roles={["admin", "bodeguero"]}><BodegueroPanel /></RoleRoute>} />
           <Route path="/contador" element={<RoleRoute roles={["admin", "contador"]}><ContadorPanel /></RoleRoute>} />
         </Routes>
+        </Suspense>
       </main>
       {!isStaff && <Footer />}
     </div>
   )
 }
+
+const RouteLoader = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+  </div>
+)
 
 const App = () => {
   return (

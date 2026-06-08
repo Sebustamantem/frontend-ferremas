@@ -9,6 +9,7 @@ const Success = () => {
     const [order, setOrder] = useState(null)
     const [survey, setSurvey] = useState({ rating: 5, comment: "" })
     const [surveySent, setSurveySent] = useState(false)
+    const [surveyError, setSurveyError] = useState("")
     const navigate = useNavigate()
     const orderId = searchParams.get("order_id")
     const method = searchParams.get("method")
@@ -27,11 +28,12 @@ const Success = () => {
     }, [orderId])
 
     const submitSurvey = async () => {
+        setSurveyError("")
         try {
             await api.post("/surveys", { order_id: orderId, ...survey })
             setSurveySent(true)
         } catch (err) {
-            alert(err.response?.data?.message || "No se pudo enviar la encuesta")
+            setSurveyError(err.response?.data?.message || "No se pudo enviar la encuesta")
         }
     }
 
@@ -125,6 +127,11 @@ const Success = () => {
                                 placeholder="Comentario opcional"
                                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm mb-3"
                             />
+                            {surveyError && (
+                                <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-3 py-2 text-xs mb-3">
+                                    {surveyError}
+                                </div>
+                            )}
                             <button onClick={submitSurvey} className="w-full bg-gray-900 text-white rounded-xl py-2 text-sm font-semibold">
                                 Enviar encuesta
                             </button>

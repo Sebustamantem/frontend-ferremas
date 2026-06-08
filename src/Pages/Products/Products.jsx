@@ -96,7 +96,7 @@ const Products = () => {
                 : prev.filter((id) => id !== productId)
             )
         } catch (err) {
-            alert(err.response?.data?.message || "No se pudo actualizar favorito")
+            console.error(err.response?.data?.message || "No se pudo actualizar favorito")
         }
     }
 
@@ -120,12 +120,12 @@ const Products = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen brand-page">
             <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8">
 
                 <div className="mb-5 sm:mb-6">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Productos</h1>
-                    <p className="text-gray-400 text-sm mt-1">{filtered.length} productos encontrados</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Productos</h1>
+                    <p className="text-gray-600 text-sm mt-1">{filtered.length} productos encontrados</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -133,12 +133,12 @@ const Products = () => {
                         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input type="text" placeholder="Buscar productos..."
                             value={search} onChange={(e) => handleSearchChange(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-amber-100 bg-white/95 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                     </div>
                     <div className="flex items-center gap-2">
                         <SlidersHorizontal size={18} className="text-gray-400 shrink-0" />
                         <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
-                            className="w-full sm:w-auto py-3 px-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            className="w-full sm:w-auto py-3 px-4 rounded-xl border border-amber-100 bg-white/95 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                             <option value="newest">Más recientes</option>
                             <option value="price_asc">Menor precio</option>
                             <option value="price_desc">Mayor precio</option>
@@ -150,8 +150,8 @@ const Products = () => {
                     {categories.map((cat) => (
                         <button key={cat} onClick={() => handleCategoryChange(cat)}
                             className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition ${activeCategory === cat
-                                    ? "bg-orange-500 text-white shadow-md"
-                                    : "bg-white text-gray-600 border border-gray-200 hover:border-orange-400 hover:text-orange-500"
+                                    ? "brand-button text-gray-950 shadow-md"
+                                    : "bg-white/95 text-gray-700 border border-amber-100 hover:border-teal-300 hover:text-teal-700"
                                 }`}>
                             {cat}
                         </button>
@@ -160,7 +160,7 @@ const Products = () => {
 
                 {loading ? (
                     <div className="flex justify-center py-20">
-                        <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : filtered.length === 0 ? (
                     <div className="text-center py-20 text-gray-400">
@@ -176,9 +176,9 @@ const Products = () => {
                                 onKeyDown={(e) => e.key === "Enter" && navigate(`/productos/${p.id}`)}
                                 role="button"
                                 tabIndex={0}
-                                className="bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition group border border-gray-100 min-w-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                className="brand-card rounded-xl sm:rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group border min-w-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500"
                             >
-                                <div className="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl bg-gray-50 h-36 sm:h-48">
+                                <div className="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl bg-gradient-to-br from-amber-50 to-teal-50 h-36 sm:h-48">
                                     {p.image_url ? (
                                         <img src={p.image_url} alt={p.name}
                                             className="w-full h-full object-contain p-4 group-hover:scale-105 transition duration-300" />
@@ -202,10 +202,10 @@ const Products = () => {
                                     )}
                                 </div>
                                 <div className="p-3 sm:p-4">
-                                    <span className="text-xs text-orange-500 font-medium">{p.category}</span>
+                                    <span className="text-xs text-teal-700 font-medium">{p.category}</span>
                                     <h3 className="text-sm font-semibold text-gray-800 mt-1 line-clamp-2">{p.name}</h3>
-                                    <p className="text-xs text-gray-400 mt-1 line-clamp-1">{p.description}</p>
-                                    <p className="text-xs text-gray-400 mt-1">Stock: {p.stock}</p>
+                                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">{p.description}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Stock: {p.stock}</p>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-3">
                                         <span className="text-base sm:text-lg font-bold text-gray-800">
                                             ${Number(p.price).toLocaleString("es-CL")}
@@ -216,7 +216,7 @@ const Products = () => {
                                                 handleAddToCart(p.id)
                                             }}
                                             disabled={p.stock === 0}
-                                            className="flex items-center justify-center gap-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white text-xs px-3 py-2 rounded-xl transition w-full sm:w-auto">
+                                            className="flex items-center justify-center gap-1 brand-button disabled:bg-none disabled:bg-gray-200 disabled:text-gray-600 text-xs px-3 py-2 rounded-xl transition w-full sm:w-auto">
                                             <ShoppingCart size={14} />
                                             {p.stock === 0 ? "Agotado" : "Agregar"}
                                         </button>

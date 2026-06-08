@@ -46,6 +46,7 @@ const VendedorPanel = () => {
     const [error, setError] = useState("")
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [updatingOrderId, setUpdatingOrderId] = useState(null)
+    const [notice, setNotice] = useState(null)
 
     useEffect(() => {
         if (!user) return
@@ -77,9 +78,10 @@ const VendedorPanel = () => {
         setUpdatingOrderId(orderId)
         try {
             await api.put(`/staff/orders/${orderId}/status`, { status })
+            setNotice({ type: "success", message: "Estado actualizado correctamente." })
             await fetchData()
         } catch (err) {
-            alert(err.response?.data?.message || "Error al actualizar el estado")
+            setNotice({ type: "error", message: err.response?.data?.message || "Error al actualizar el estado" })
         } finally {
             setUpdatingOrderId(null)
         }
@@ -134,6 +136,18 @@ const VendedorPanel = () => {
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-6">
                         {error}
+                    </div>
+                )}
+
+                {notice && (
+                    <div className={`rounded-lg px-4 py-3 text-sm mb-6 border ${notice.type === "success"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <span>{notice.message}</span>
+                            <button type="button" onClick={() => setNotice(null)} className="font-bold">Cerrar</button>
+                        </div>
                     </div>
                 )}
 

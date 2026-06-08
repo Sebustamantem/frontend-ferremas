@@ -69,7 +69,7 @@ const Register = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
+        <div className="min-h-screen flex items-center justify-center brand-page px-4 py-10">
             <div className="w-full max-w-md">
 
                 {/* Logo */}
@@ -78,7 +78,7 @@ const Register = () => {
                 </div>
 
                 {/* Card */}
-                <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="brand-card rounded-2xl shadow-xl border p-8">
                     <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">Crear Cuenta</h2>
                     <p className="text-center text-gray-400 text-sm mb-6">Regístrate para comenzar a comprar</p>
 
@@ -97,7 +97,7 @@ const Register = () => {
                                 <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input type="email" name="email" placeholder="Ingresa un correo"
                                     value={form.email} onChange={handleChange} required
-                                    className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
+                                    className="w-full border border-teal-100 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                             </div>
                         </div>
 
@@ -108,7 +108,7 @@ const Register = () => {
                                 <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input type="text" name="name" placeholder="Ingresa un nombre"
                                     value={form.name} onChange={handleChange} required
-                                    className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
+                                    className="w-full border border-teal-100 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                             </div>
                         </div>
 
@@ -119,7 +119,7 @@ const Register = () => {
                                 <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input type="text" name="lastname" placeholder="Ingresa apellidos"
                                     value={form.lastname} onChange={handleChange} required
-                                    className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
+                                    className="w-full border border-teal-100 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                             </div>
                         </div>
 
@@ -127,7 +127,7 @@ const Register = () => {
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-medium text-gray-500">Tipo de documento</label>
                             <div className="flex gap-2">
-                                <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 text-sm font-medium text-gray-600">
+                                <div className="flex items-center bg-white/80 border border-teal-100 rounded-xl px-3 text-sm font-medium text-gray-600">
                                     RUT
                                 </div>
                                 <div className="relative flex-1">
@@ -135,7 +135,7 @@ const Register = () => {
                                     <input type="text" name="rut" placeholder="Ingresa un documento de identidad"
                                         value={form.rut} onChange={handleRutChange} required
                                         maxLength={12}
-                                        className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
+                                        className="w-full border border-teal-100 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 </div>
                             </div>
                         </div>
@@ -144,14 +144,14 @@ const Register = () => {
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-medium text-gray-500">Celular</label>
                             <div className="flex gap-2">
-                                <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 text-sm font-medium text-gray-600 whitespace-nowrap">
+                                <div className="flex items-center bg-white/80 border border-teal-100 rounded-xl px-3 text-sm font-medium text-gray-600 whitespace-nowrap">
                                     +56
                                 </div>
                                 <div className="relative flex-1">
                                     <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" name="phone" placeholder="Ingresa un celular"
                                         value={form.phone} onChange={handlePhoneChange} required
-                                        className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
+                                        className="w-full border border-teal-100 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 </div>
                             </div>
                             <p className="text-xs text-gray-400 px-1">Comienza con 9.</p>
@@ -165,7 +165,7 @@ const Register = () => {
                                 <input type={showPassword ? "text" : "password"} name="password"
                                     placeholder="Ingresa una contraseña"
                                     value={form.password} onChange={handleChange} required
-                                    className="w-full border border-gray-200 rounded-xl pl-11 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50" />
+                                    className="w-full border border-teal-100 rounded-xl pl-11 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -177,21 +177,21 @@ const Register = () => {
                                     "1 minúscula", "Sin espacio", "Sin usar \\¡¿`~çñÑ"
                                 ].map((req) => (
                                     <p key={req} className="text-xs text-gray-400 flex items-center gap-1">
-                                        <span className="text-orange-400">•</span> {req}
+                                        <span className="text-teal-600">•</span> {req}
                                     </p>
                                 ))}
                             </div>
                         </div>
 
                         <button type="submit" disabled={loading}
-                            className="bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition disabled:opacity-60 mt-1">
+                            className="brand-button py-3 rounded-xl font-semibold transition disabled:opacity-60 mt-1">
                             {loading ? "Registrando..." : "Registrarse"}
                         </button>
                     </form>
 
                     <p className="text-center text-sm mt-5 text-gray-500">
                         ¿Ya tienes cuenta?{" "}
-                        <Link to="/login" className="font-semibold text-orange-500 hover:underline">
+                        <Link to="/login" className="font-semibold text-teal-700 hover:underline">
                             Inicia sesión
                         </Link>
                     </p>

@@ -7,7 +7,7 @@ import ProfessionalServices from "../../components/home/ProfessionalServices"
 
 const Home = () => {
   return (
-    <div className="bg-gray-50">
+    <div className="brand-page">
       <Hero />
       <PromoBanner />
       <ProBanner />

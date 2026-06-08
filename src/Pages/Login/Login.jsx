@@ -32,15 +32,15 @@ const Login = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
+        <div className="min-h-screen flex items-center justify-center brand-page px-4 py-10">
             <div className="w-full max-w-md">
                 <div className="flex justify-center mb-6">
                     <img src="/images/Logo.png" alt="Ferremas" className="h-20 object-contain drop-shadow-lg" />
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="brand-card rounded-2xl shadow-xl border p-8">
                     <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">Iniciar Sesion</h2>
-                    <p className="text-center text-gray-400 text-sm mb-6">
+                    <p className="text-center text-gray-500 text-sm mb-6">
                         Entra para comprar, revisar pedidos y usar tus beneficios.
                     </p>
 
@@ -62,23 +62,23 @@ const Login = () => {
                                     value={form.email}
                                     onChange={handleChange}
                                     required
-                                    className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50"
+                                    className="w-full border border-teal-100 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80"
                                 />
                             </div>
                         </div>
 
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs font-medium text-gray-500">Contrasena</label>
+                            <label className="text-xs font-medium text-gray-500">Contraseña</label>
                             <div className="relative">
                                 <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     name="password"
-                                    placeholder="Ingresa tu contrasena"
+                                    placeholder="Ingresa tu contraseña"
                                     value={form.password}
                                     onChange={handleChange}
                                     required
-                                    className="w-full border border-gray-200 rounded-xl pl-11 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50"
+                                    className="w-full border border-teal-100 rounded-xl pl-11 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80"
                                 />
                                 <button
                                     type="button"
@@ -93,7 +93,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition disabled:opacity-60 mt-1"
+                            className="brand-button py-3 rounded-xl font-semibold transition disabled:opacity-60 mt-1"
                         >
                             {loading ? "Cargando..." : "Iniciar Sesion"}
                         </button>
@@ -101,7 +101,7 @@ const Login = () => {
 
                     <p className="text-center text-sm mt-5 text-gray-500">
                         No tienes cuenta?{" "}
-                        <Link to="/register" className="font-semibold text-orange-500 hover:underline">
+                        <Link to="/register" className="font-semibold text-teal-700 hover:underline">
                             Registrate
                         </Link>
                     </p>

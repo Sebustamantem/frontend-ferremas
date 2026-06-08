@@ -114,7 +114,7 @@ const RegisterPro = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
+        <div className="min-h-screen flex items-center justify-center brand-page px-4 py-10">
             <div className="w-full max-w-lg">
 
                 {/* Logo */}
@@ -123,7 +123,7 @@ const RegisterPro = () => {
                 </div>
 
                 {/* Card */}
-                <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="brand-card rounded-2xl shadow-xl border p-8">
                     <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">{title}</h2>
                     <p className="text-center text-gray-400 text-sm mb-6">
                         {subtitle}
@@ -135,7 +135,7 @@ const RegisterPro = () => {
                             type="button"
                             onClick={() => setUserType("maestro")}
                             className={`flex-1 py-3 rounded-xl font-semibold text-sm transition ${userType === "maestro"
-                                ? "bg-gray-900 text-white"
+                                ? "brand-button-dark text-white"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
@@ -145,7 +145,7 @@ const RegisterPro = () => {
                             type="button"
                             onClick={() => setUserType("pyme")}
                             className={`flex-1 py-3 rounded-xl font-semibold text-sm transition ${userType === "pyme"
-                                ? "bg-gray-900 text-white"
+                                ? "brand-button-dark text-white"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
@@ -154,9 +154,9 @@ const RegisterPro = () => {
                     </div>
 
                     {/* Beneficios */}
-                    <div className="bg-orange-50 rounded-2xl p-4 mb-6">
-                        <p className="text-xs font-bold text-orange-600 mb-2">Beneficios exclusivos:</p>
-                        <ul className="text-xs text-orange-700 flex flex-col gap-1">
+                    <div className="bg-amber-50 border border-teal-100 rounded-2xl p-4 mb-6">
+                        <p className="text-xs font-bold text-teal-700 mb-2">Beneficios exclusivos:</p>
+                        <ul className="text-xs text-gray-700 flex flex-col gap-1">
                             <li>30% de descuento en tu primera compra</li>
                             <li>Acceso a FerreCredito (compra a cuotas)</li>
                             <li>Publica tus servicios en Ferremas</li>
@@ -179,7 +179,7 @@ const RegisterPro = () => {
                                     <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" name="name" placeholder="Nombre"
                                         value={form.name} onChange={handleChange} required
-                                        className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
+                                        className="w-full border border-teal-100 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 </div>
                             </div>
                             <div className="flex flex-col gap-1">
@@ -188,7 +188,7 @@ const RegisterPro = () => {
                                     <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" name="lastname" placeholder="Apellidos"
                                         value={form.lastname} onChange={handleChange} required
-                                        className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
+                                        className="w-full border border-teal-100 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 </div>
                             </div>
                         </div>
@@ -201,7 +201,7 @@ const RegisterPro = () => {
                                     <Building size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" name="business_name" placeholder="Razón social o nombre empresa"
                                         value={form.business_name} onChange={handleChange} required
-                                        className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
+                                        className="w-full border border-teal-100 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 </div>
                             </div>
                         ) : (
@@ -211,7 +211,7 @@ const RegisterPro = () => {
                                     <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" name="profession" placeholder="Ej: Gasfiter, Electricista, Albañil"
                                         value={form.profession} onChange={handleChange} required
-                                        className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
+                                        className="w-full border border-teal-100 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 </div>
                             </div>
                         )}
@@ -223,7 +223,7 @@ const RegisterPro = () => {
                                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input type="email" name="email" placeholder="correo@ejemplo.com"
                                     value={form.email} onChange={handleChange} required
-                                    className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
+                                    className="w-full border border-teal-100 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                             </div>
                         </div>
 
@@ -235,7 +235,7 @@ const RegisterPro = () => {
                                 <input type="text" name="rut" placeholder="12.345.678-9"
                                     value={form.rut} onChange={handleRutChange} required
                                     maxLength={12}
-                                    className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
+                                    className="w-full border border-teal-100 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                             </div>
                         </div>
 
@@ -243,14 +243,14 @@ const RegisterPro = () => {
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-medium text-gray-500">Celular</label>
                             <div className="flex gap-2">
-                                <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 text-sm font-medium text-gray-600">
+                                <div className="flex items-center bg-white/80 border border-teal-100 rounded-xl px-3 text-sm font-medium text-gray-600">
                                     +56
                                 </div>
                                 <div className="relative flex-1">
                                     <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" name="phone" placeholder="9XXXXXXXX"
                                         value={form.phone} onChange={handlePhoneChange} required
-                                        className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
+                                        className="w-full border border-teal-100 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 </div>
                             </div>
                         </div>
@@ -263,7 +263,7 @@ const RegisterPro = () => {
                                 <input type={showPassword ? "text" : "password"} name="password"
                                     placeholder="Contraseña segura"
                                     value={form.password} onChange={handleChange} required={!user}
-                                    className="w-full border border-gray-200 rounded-xl pl-9 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50" />
+                                    className="w-full border border-teal-100 rounded-xl pl-9 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white/80" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -273,7 +273,7 @@ const RegisterPro = () => {
                         </div>
 
                         <button type="submit" disabled={loading}
-                            className="bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition disabled:opacity-60 mt-1">
+                            className="brand-button-dark py-3 rounded-xl font-semibold transition disabled:opacity-60 mt-1">
                             {loading
                                 ? "Procesando..."
                                 : isUpgrade

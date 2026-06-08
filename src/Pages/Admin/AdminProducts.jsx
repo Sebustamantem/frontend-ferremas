@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom"
 import {
     AlertTriangle,
     Boxes,
+    CheckCircle,
     CreditCard,
+    MessageSquareWarning,
     Pencil,
     Plus,
     Search,
@@ -14,6 +16,8 @@ import {
 } from "lucide-react"
 import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
+import { downloadCsv } from "../../utils/csv"
+import ExportMenu from "../../components/ui/ExportMenu"
 
 const categories = [
     "Herramientas", "Construccion", "Electricidad",
@@ -43,6 +47,11 @@ const AdminProducts = () => {
     const [error, setError] = useState("")
     const [search, setSearch] = useState("")
     const [categoryFilter, setCategoryFilter] = useState("Todas")
+    const [stockFilter, setStockFilter] = useState("all")
+    const [reportFilter, setReportFilter] = useState("all")
+    const [stockReports, setStockReports] = useState([])
+    const [notice, setNotice] = useState(null)
+    const [deleteTarget, setDeleteTarget] = useState(null)
 
     useEffect(() => {
         if (!user || user.role !== "admin") {
@@ -50,6 +59,7 @@ const AdminProducts = () => {
             return
         }
         fetchProducts()
+        fetchStockReports()
     }, [user, navigate])
 
     const fetchProducts = async () => {
@@ -61,6 +71,15 @@ const AdminProducts = () => {
             console.error(err)
         } finally {
             setFetching(false)
+        }
+    }
+
+    const fetchStockReports = async () => {
+        try {
+            const res = await api.get("/staff/admin/stock-reports")
+            setStockReports(res.data)
+        } catch (err) {
+            console.error(err)
         }
     }
 
@@ -78,14 +97,25 @@ const AdminProducts = () => {
     }, [products])
 
     const filteredProducts = useMemo(() => {
+        const reportedProductIds = new Set(
+            stockReports
+                .filter((report) => report.status === "pending")
+                .map((report) => Number(report.product_id))
+        )
         return products.filter((product) => {
+            const stock = Number(product.stock || 0)
             const matchesSearch = product.name?.toLowerCase().includes(search.toLowerCase())
                 || product.description?.toLowerCase().includes(search.toLowerCase())
             const matchesCategory = categoryFilter === "Todas"
                 || normalizeCategory(product.category) === normalizeCategory(categoryFilter)
-            return matchesSearch && matchesCategory
+            const matchesStock = stockFilter === "all"
+                || (stockFilter === "available" && stock > 5)
+                || (stockFilter === "low" && stock > 0 && stock <= 5)
+                || (stockFilter === "out" && stock === 0)
+            const matchesReport = reportFilter === "all" || reportedProductIds.has(Number(product.id))
+            return matchesSearch && matchesCategory && matchesStock && matchesReport
         })
-    }, [products, search, categoryFilter])
+    }, [products, search, categoryFilter, stockFilter, reportFilter, stockReports])
 
     const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value })
 
@@ -121,6 +151,7 @@ const AdminProducts = () => {
             }
             handleCloseModal()
             fetchProducts()
+            fetchStockReports()
         } catch (err) {
             setError(err.response?.data?.message || "Error al guardar producto")
         } finally {
@@ -142,13 +173,34 @@ const AdminProducts = () => {
         setShowModal(true)
     }
 
-    const handleDelete = async (id) => {
-        if (!confirm("Seguro que quieres eliminar este producto?")) return
+    const handleEditFromReport = (report) => {
+        const product = products.find((item) => item.id === report.product_id)
+        if (product) handleEdit(product)
+    }
+
+    const handleResolveReport = async (reportId) => {
         try {
-            await api.delete(`/products/${id}`)
+            await api.put(`/staff/admin/stock-reports/${reportId}/resolve`)
+            setNotice({ type: "success", message: "Aviso de bodega marcado como resuelto." })
+            fetchStockReports()
+        } catch (err) {
+            setNotice({ type: "error", message: err.response?.data?.message || "No se pudo resolver el aviso" })
+        }
+    }
+
+    const handleDelete = async (id) => {
+        setDeleteTarget(products.find((product) => product.id === id))
+    }
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return
+        try {
+            await api.delete(`/products/${deleteTarget.id}`)
+            setNotice({ type: "success", message: "Producto eliminado correctamente." })
+            setDeleteTarget(null)
             fetchProducts()
         } catch (err) {
-            console.error(err)
+            setNotice({ type: "error", message: err.response?.data?.message || "No se pudo eliminar el producto" })
         }
     }
 
@@ -161,10 +213,33 @@ const AdminProducts = () => {
         setError("")
     }
 
+    const exportProducts = () => {
+        downloadCsv("ferremas-productos.csv", filteredProducts.map((product) => ({
+            id: product.id,
+            nombre: product.name,
+            categoria: product.category || "",
+            precio: Number(product.price || 0),
+            stock: Number(product.stock || 0),
+            estado_stock: Number(product.stock || 0) === 0 ? "agotado" : Number(product.stock || 0) <= 5 ? "bajo" : "disponible",
+        })))
+    }
+
+    const exportStockReports = () => {
+        downloadCsv("ferremas-reportes-bodega.csv", stockReports.map((report) => ({
+            id: report.id,
+            producto: report.product_name,
+            estado: report.status,
+            stock_registrado: report.stock,
+            reportado_por: `${report.reporter_name || ""} ${report.reporter_lastname || ""}`.trim(),
+            motivo: report.reason,
+            fecha: report.created_at,
+        })))
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
             <div className="max-w-7xl mx-auto">
-                <div className="mb-6 overflow-hidden rounded-lg bg-gray-900 text-white shadow-sm">
+                <div className="mb-6 overflow-visible rounded-lg bg-gray-900 text-white shadow-sm">
                     <div className="p-6 sm:p-8">
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                             <div>
@@ -203,6 +278,13 @@ const AdminProducts = () => {
                                     <Plus size={18} />
                                     Nuevo producto
                                 </button>
+                                <ExportMenu
+                                    dark
+                                    items={[
+                                        { label: "Catalogo visible", description: "Respeta busqueda y filtros actuales", onClick: exportProducts },
+                                        { label: "Reportes de bodega", description: "Pendientes y resueltos", onClick: exportStockReports },
+                                    ]}
+                                />
                             </div>
                         </div>
                     </div>
@@ -214,6 +296,66 @@ const AdminProducts = () => {
                     <StatCard icon={AlertTriangle} label="Stock bajo" value={stats.lowStock} color="yellow" />
                     <StatCard icon={X} label="Agotados" value={stats.outOfStock} color="red" />
                 </div>
+
+                {notice && (
+                    <div className={`mb-6 rounded-lg border px-4 py-3 text-sm ${notice.type === "success"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <span>{notice.message}</span>
+                            <button type="button" onClick={() => setNotice(null)} className="font-bold">Cerrar</button>
+                        </div>
+                    </div>
+                )}
+
+                {stockReports.filter((report) => report.status === "pending").length > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-start gap-3 mb-4">
+                            <MessageSquareWarning size={20} className="text-amber-700 shrink-0 mt-0.5" />
+                            <div>
+                                <h2 className="text-sm font-bold text-amber-900">Avisos de bodega pendientes</h2>
+                                <p className="text-sm text-amber-800 mt-1">
+                                    El bodeguero informa productos no disponibles o con stock que no coincide. Solo el admin ajusta el inventario.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            {stockReports.filter((report) => report.status === "pending").map((report) => (
+                                <div key={report.id} className="bg-white rounded-lg border border-amber-100 p-4 flex flex-col gap-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-gray-900 truncate">{report.product_name}</p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Stock registrado: {report.stock} unidades | Reportado por {report.reporter_name || "Bodega"}
+                                            </p>
+                                        </div>
+                                        <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-semibold">
+                                            Pendiente
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-700">{report.reason}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            onClick={() => handleEditFromReport(report)}
+                                            className="inline-flex items-center gap-2 bg-gray-900 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-gray-800 transition"
+                                        >
+                                            <Pencil size={14} />
+                                            Editar producto
+                                        </button>
+                                        <button
+                                            onClick={() => handleResolveReport(report.id)}
+                                            className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-xs font-semibold hover:bg-green-200 transition"
+                                        >
+                                            <CheckCircle size={14} />
+                                            Marcar resuelto
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-4 sm:p-5 border-b border-gray-100">
@@ -241,6 +383,24 @@ const AdminProducts = () => {
                                     {categories.map((category) => (
                                         <option key={category} value={category}>{category}</option>
                                     ))}
+                                </select>
+                                <select
+                                    value={stockFilter}
+                                    onChange={(event) => setStockFilter(event.target.value)}
+                                    className="py-2.5 px-4 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                >
+                                    <option value="all">Todo stock</option>
+                                    <option value="available">Disponible</option>
+                                    <option value="low">Stock bajo</option>
+                                    <option value="out">Agotado</option>
+                                </select>
+                                <select
+                                    value={reportFilter}
+                                    onChange={(event) => setReportFilter(event.target.value)}
+                                    className="py-2.5 px-4 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                >
+                                    <option value="all">Todos</option>
+                                    <option value="reported">Reportado por bodega</option>
                                 </select>
                             </div>
                         </div>
@@ -434,6 +594,33 @@ const AdminProducts = () => {
                                 {loading ? "Guardando..." : editingId ? "Actualizar producto" : "Agregar producto"}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {deleteTarget && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900">Eliminar producto</h2>
+                        <p className="text-sm text-gray-500 mt-2">
+                            Esta accion eliminara "{deleteTarget.name}" del catalogo.
+                        </p>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button
+                                type="button"
+                                onClick={() => setDeleteTarget(null)}
+                                className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

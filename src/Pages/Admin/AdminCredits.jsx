@@ -3,6 +3,8 @@ import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { CreditCard, X, Check } from "lucide-react"
 import api from "../../api/axios"
+import { downloadCsv } from "../../utils/csv"
+import ExportMenu from "../../components/ui/ExportMenu"
 
 const AdminCredits = () => {
     const { user } = useAuth()
@@ -16,6 +18,8 @@ const AdminCredits = () => {
     const [form, setForm] = useState({ credit_limit: "", is_active: true })
     const [activeTab, setActiveTab] = useState("credits")
     const [error, setError] = useState("")
+    const [notice, setNotice] = useState(null)
+    const [confirmAction, setConfirmAction] = useState(null)
 
     useEffect(() => {
         if (!user || user.role !== "admin") { navigate("/"); return }
@@ -67,32 +71,50 @@ const AdminCredits = () => {
         try {
             await api.post(`/ferre-credit/user/${selectedUser.id}`, form)
             setShowModal(false)
+            setNotice({ type: "success", message: "FerreCredito guardado correctamente." })
             fetchData()
         } catch (err) {
-            alert(err.response?.data?.message || "Error al guardar FerreCredito")
+            setNotice({ type: "error", message: err.response?.data?.message || "Error al guardar FerreCredito" })
         }
     }
 
     const handleRejectApplication = async (u) => {
-        if (!confirm(`Rechazar postulacion de ${u.name}?`)) return
-        try {
-            await api.post(`/ferre-credit/user/${u.id}/reject`)
-            fetchData()
-        } catch (err) {
-            alert(err.response?.data?.message || "Error al rechazar postulacion")
-        }
+        setConfirmAction({
+            title: "Rechazar postulacion",
+            message: `Rechazar postulacion de ${u.name}?`,
+            confirmLabel: "Rechazar",
+            tone: "danger",
+            run: async () => {
+                await api.post(`/ferre-credit/user/${u.id}/reject`)
+                setNotice({ type: "success", message: "Postulacion rechazada." })
+                fetchData()
+            },
+        })
     }
 
     const handlePayInstallment = async (installmentId) => {
-        if (!confirm("¿Registrar pago de esta cuota?")) return
-        try {
-            await api.post(`/ferre-credit/installments/${installmentId}/pay`)
-            fetchInstallments()
-        } catch (err) {
-            alert(err.response?.data?.message || "Error al registrar pago")
-        }
+        setConfirmAction({
+            title: "Registrar pago",
+            message: "Registrar pago de esta cuota?",
+            confirmLabel: "Registrar pago",
+            tone: "success",
+            run: async () => {
+                await api.post(`/ferre-credit/installments/${installmentId}/pay`)
+                setNotice({ type: "success", message: "Pago de cuota registrado." })
+                fetchInstallments()
+            },
+        })
     }
 
+    const runConfirmAction = async () => {
+        if (!confirmAction) return
+        try {
+            await confirmAction.run()
+            setConfirmAction(null)
+        } catch (err) {
+            setNotice({ type: "error", message: err.response?.data?.message || "No se pudo completar la accion" })
+        }
+    }
     const getCreditForUser = (userId) => credits.find(c => c.user_id === userId)
     const isPendingApplication = (type) => ["maestro_pending", "pyme_pending"].includes(type)
     const getUserTypeLabel = (type) => {
@@ -104,6 +126,49 @@ const AdminCredits = () => {
     const statusColors = {
         active: "bg-yellow-100 text-yellow-600",
         completed: "bg-green-100 text-green-600",
+        overdue: "bg-red-100 text-red-600",
+    }
+
+    const statusLabels = {
+        active: "Pendiente",
+        completed: "Pagada",
+        overdue: "Vencida",
+    }
+
+    const formatDate = (value) => {
+        if (!value) return "Sin fecha"
+        return new Date(value).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" })
+    }
+
+    const exportCredits = () => {
+        downloadCsv("ferremas-creditos.csv", users.map((item) => {
+            const credit = getCreditForUser(item.id)
+            return {
+                id_usuario: item.id,
+                nombre: `${item.name || ""} ${item.lastname || ""}`.trim(),
+                email: item.email,
+                tipo: item.user_type,
+                limite: credit ? Number(credit.credit_limit || 0) : 0,
+                usado: credit ? Number(credit.balance_used || 0) : 0,
+                disponible: credit ? Number(credit.credit_limit || 0) - Number(credit.balance_used || 0) : 0,
+                activo: credit ? (credit.is_active ? "si" : "no") : "sin_credito",
+            }
+        }))
+    }
+
+    const exportInstallments = () => {
+        downloadCsv("ferremas-cuotas.csv", installments.map((inst) => ({
+            id: inst.id,
+            usuario: inst.user_name,
+            email: inst.user_email,
+            orden: inst.order_id,
+            total: Number(inst.total_amount || 0),
+            cuotas: inst.installments,
+            cuota_mensual: Number(inst.amount_per_installment || 0),
+            pagadas: inst.paid_installments,
+            vencimiento: inst.due_date || "",
+            estado: inst.effective_status || inst.status,
+        })))
     }
 
     return (
@@ -128,6 +193,18 @@ const AdminCredits = () => {
                     </div>
                 )}
 
+                {notice && (
+                    <div className={`rounded-xl px-4 py-3 text-sm mb-6 border ${notice.type === "success"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <span>{notice.message}</span>
+                            <button type="button" onClick={() => setNotice(null)} className="font-bold">Cerrar</button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Tabs */}
                 <div className="flex gap-2 mb-6">
                     {["credits", "installments"].map((tab) => (
@@ -139,6 +216,12 @@ const AdminCredits = () => {
                             {tab === "credits" ? "💳 Créditos" : "📋 Cuotas"}
                         </button>
                     ))}
+                    <ExportMenu
+                        items={[
+                            { label: "Creditos", description: "Cupos, usado y disponible", onClick: exportCredits },
+                            { label: "Cuotas", description: "Vencimientos y estados", onClick: exportInstallments },
+                        ]}
+                    />
                 </div>
 
                 {/* Tab Créditos */}
@@ -263,6 +346,7 @@ const AdminCredits = () => {
                                         <th className="px-6 py-4 text-left">Cuotas</th>
                                         <th className="px-6 py-4 text-left">Por cuota</th>
                                         <th className="px-6 py-4 text-left">Pagadas</th>
+                                        <th className="px-6 py-4 text-left">Vence</th>
                                         <th className="px-6 py-4 text-left">Estado</th>
                                         <th className="px-6 py-4 text-center">Acción</th>
                                     </tr>
@@ -290,13 +374,16 @@ const AdminCredits = () => {
                                                     {inst.paid_installments}/{inst.installments}
                                                 </span>
                                             </td>
+                                            <td className="px-6 py-4 text-gray-600">
+                                                {formatDate(inst.due_date)}
+                                            </td>
                                             <td className="px-6 py-4">
-                                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusColors[inst.status] || "bg-gray-100 text-gray-600"}`}>
-                                                    {inst.status === "active" ? "⏳ Activo" : "✅ Completado"}
+                                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusColors[inst.effective_status || inst.status] || "bg-gray-100 text-gray-600"}`}>
+                                                    {statusLabels[inst.effective_status || inst.status] || inst.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                {inst.status === "active" && inst.paid_installments < inst.installments && (
+                                                {(inst.effective_status || inst.status) !== "completed" && inst.paid_installments < inst.installments && (
                                                     <button onClick={() => handlePayInstallment(inst.id)}
                                                         className="bg-green-500 hover:bg-green-600 text-white text-xs px-4 py-2 rounded-xl transition flex items-center gap-1 mx-auto">
                                                         <Check size={14} />
@@ -350,6 +437,31 @@ const AdminCredits = () => {
                                 Guardar
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {confirmAction && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900">{confirmAction.title}</h2>
+                        <p className="text-sm text-gray-500 mt-2">{confirmAction.message}</p>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button
+                                type="button"
+                                onClick={() => setConfirmAction(null)}
+                                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={runConfirmAction}
+                                className={`px-4 py-2 rounded-xl text-white text-sm font-semibold ${confirmAction.tone === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
+                            >
+                                {confirmAction.confirmLabel}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

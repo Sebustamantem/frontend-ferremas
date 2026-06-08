@@ -28,6 +28,7 @@ const Checkout = () => {
     const [deliveryMethod, setDeliveryMethod] = useState("delivery")
     const [saveAddress, setSaveAddress] = useState(false)
     const [addressTouched, setAddressTouched] = useState(false)
+    const [checkoutNotice, setCheckoutNotice] = useState(null)
     const [address, setAddress] = useState({
         receiver: "",
         region: "",
@@ -105,8 +106,10 @@ const Checkout = () => {
     const appliedPoints = Math.min(Number(pointsToUse || 0), maxPointsToUse)
     const finalTotal = Math.max(discountedTotal + shipping - appliedPoints, 0)
     const available = myCredit
-        ? Number(myCredit.credit_limit) - Number(myCredit.balance_used)
+        ? Math.max(Number(myCredit.credit_limit) - Number(myCredit.balance_used), 0)
         : 0
+    const hasInsufficientFerreCredit = payMethod === "ferrecredito" && myCredit?.is_active && available < finalTotal
+    const hasInactiveFerreCredit = payMethod === "ferrecredito" && !myCredit?.is_active
 
     useEffect(() => {
         api.get("/points/my")
@@ -172,8 +175,25 @@ const Checkout = () => {
 
     const handlePay = async () => {
         setAddressTouched(true)
+        setCheckoutNotice(null)
         if (!canContinueCheckout) {
-            alert("Por favor completa todos los campos de dirección")
+            setCheckoutNotice({
+                type: "error",
+                message: deliveryMethod === "pickup"
+                    ? "Completa nombre y telefono de contacto para retirar en tienda."
+                    : "Completa direccion, comuna, region y telefono para continuar.",
+            })
+            return
+        }
+        if (hasInactiveFerreCredit) {
+            setCheckoutNotice({ type: "error", message: "Tu FerreCredito no esta activo para usarlo en esta compra." })
+            return
+        }
+        if (hasInsufficientFerreCredit) {
+            setCheckoutNotice({
+                type: "error",
+                message: `No tienes cupo suficiente en FerreCredito. Disponible: $${available.toLocaleString("es-CL")}.`,
+            })
             return
         }
         setPayLoading(true)
@@ -214,7 +234,7 @@ const Checkout = () => {
                 navigate(`/checkout/success?order_id=${res.data.order_id}&method=ferrecredito`)
             }
         } catch (err) {
-            alert(err.response?.data?.message || "Error al procesar el pago.")
+            setCheckoutNotice({ type: "error", message: err.response?.data?.message || "Error al procesar el pago." })
             setPayLoading(false)
         }
     }
@@ -234,6 +254,18 @@ const Checkout = () => {
                         <p className="text-gray-400 text-sm mt-1">Revisa tu pedido antes de pagar</p>
                     </div>
                 </div>
+
+                {checkoutNotice && (
+                    <div className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${checkoutNotice.type === "success"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <span>{checkoutNotice.message}</span>
+                            <button type="button" onClick={() => setCheckoutNotice(null)} className="font-bold">Cerrar</button>
+                        </div>
+                    </div>
+                )}
 
                 {cart.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -393,6 +425,11 @@ const Checkout = () => {
                                             {/* Selector de cuotas */}
                                             {payMethod === "ferrecredito" && myCredit?.is_active && (
                                                 <div className="flex flex-col gap-2 mt-2 pl-8">
+                                                    {available < finalTotal && (
+                                                        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
+                                                            No tienes cupo suficiente para esta compra. Disponible: ${available.toLocaleString("es-CL")}
+                                                        </div>
+                                                    )}
                                                     <p className="text-xs font-medium text-gray-600">Número de cuotas:</p>
                                                     <div className="flex gap-2">
                                                         {[3, 6, 9, 12].map((n) => (
@@ -678,6 +715,12 @@ const Checkout = () => {
                                             </p>
                                         </div>
                                     )}
+
+                                    {hasInactiveFerreCredit && (
+                                        <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl p-3 mt-2 text-xs">
+                                            Tu FerreCredito esta inactivo. Solicita aprobacion o elige otro metodo de pago.
+                                        </div>
+                                    )}
                                 </div>
 
                                 {deliveryMethod === "delivery" && productTotal > 0 && productTotal < 50000 && (
@@ -688,7 +731,7 @@ const Checkout = () => {
 
                                 <button
                                     onClick={handlePay}
-                                    disabled={!canContinueCheckout || payLoading}
+                                    disabled={!canContinueCheckout || hasInactiveFerreCredit || hasInsufficientFerreCredit || payLoading}
                                     className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white py-4 rounded-xl font-bold text-lg transition shadow-md flex items-center justify-center gap-2"
                                 >
                                     {payMethod === "transbank" ? <CreditCard size={20} /> : <Landmark size={20} />}
@@ -704,6 +747,12 @@ const Checkout = () => {
                                 {!canContinueCheckout && (
                                     <p className="text-xs text-red-400 text-center mt-2">
                                         {deliveryMethod === "pickup" ? "Completa nombre y telefono de contacto" : "Completa la direccion para continuar"}
+                                    </p>
+                                )}
+
+                                {hasInsufficientFerreCredit && (
+                                    <p className="text-xs text-red-500 text-center mt-2">
+                                        No tienes cupo suficiente en FerreCredito para esta compra.
                                     </p>
                                 )}
 

@@ -9,6 +9,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     const { user } = useAuth()
     const navigate = useNavigate()
     const [remainingSeconds, setRemainingSeconds] = useState(null)
+    const [confirmClear, setConfirmClear] = useState(false)
 
     useEffect(() => {
         if (!reservationExpiresAt) {
@@ -37,9 +38,12 @@ const CartDrawer = ({ isOpen, onClose }) => {
     }
 
     const handleClearCart = async () => {
-        if (confirm("¿Vaciar todo el carrito?")) {
-            await clearCart()
-        }
+        setConfirmClear(true)
+    }
+
+    const confirmClearCart = async () => {
+        await clearCart()
+        setConfirmClear(false)
     }
 
     return (
@@ -53,22 +57,22 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 sm:p-6 border-b shrink-0">
                     <div className="flex items-center gap-2">
-                        <ShoppingCart size={22} className="text-orange-500" />
+                        <ShoppingCart size={22} className="text-orange-700" />
                         <h2 className="text-lg font-bold text-gray-800">Mi Carrito</h2>
                         {itemCount > 0 && (
-                            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                            <span className="brand-button-dark text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                 {itemCount}
                             </span>
                         )}
                     </div>
                     <div className="flex items-center gap-2">
                         {cart.length > 0 && (
-                            <button onClick={handleClearCart}
-                                className="text-xs text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
+                            <button type="button" onClick={handleClearCart}
+                                className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">
                                 Vaciar todo
                             </button>
                         )}
-                        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition">
+                        <button type="button" onClick={onClose} aria-label="Cerrar carrito" className="p-2 hover:bg-gray-100 rounded-xl transition">
                             <X size={22} />
                         </button>
                     </div>
@@ -80,8 +84,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
                         <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
                             <ShoppingCart size={48} className="text-gray-200" />
                             <p className="text-gray-500 font-medium">Inicia sesión para ver tu carrito</p>
-                            <button onClick={() => { onClose(); navigate("/login") }}
-                                className="bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
+                            <button type="button" onClick={() => { onClose(); navigate("/login") }}
+                                className="brand-button px-6 py-3 rounded-xl font-semibold transition">
                                 Iniciar Sesión
                             </button>
                         </div>
@@ -89,8 +93,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
                         <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
                             <ShoppingCart size={48} className="text-gray-200" />
                             <p className="text-gray-500 font-medium">Tu carrito está vacío</p>
-                            <button onClick={() => { onClose(); navigate("/productos") }}
-                                className="bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
+                            <button type="button" onClick={() => { onClose(); navigate("/productos") }}
+                                className="brand-button px-6 py-3 rounded-xl font-semibold transition">
                                 Ver Productos
                             </button>
                         </div>
@@ -106,18 +110,20 @@ const CartDrawer = ({ isOpen, onClose }) => {
                                         <img src={item.image_url} alt={item.name}
                                             className="w-14 h-14 object-contain bg-white rounded-xl border border-gray-200 p-1 shrink-0" />
                                     ) : (
-                                        <div className="w-14 h-14 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-xs shrink-0">
+                                        <div className="w-14 h-14 bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 text-xs shrink-0">
                                             Sin img
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-gray-800 line-clamp-2">{item.name}</p>
-                                        <p className="text-sm font-bold text-orange-500 mt-1">
+                                        <p className="text-sm font-bold text-orange-700 mt-1">
                                             ${Number(item.price * item.quantity).toLocaleString("es-CL")}
                                         </p>
                                         {item.item_type !== "service" ? (
                                         <div className="flex items-center gap-2 mt-2">
                                             <button
+                                                type="button"
+                                                aria-label={`Disminuir cantidad de ${item.name}`}
                                                 onClick={() => {
                                                     if (item.quantity === 1) removeFromCart(item.product_id)
                                                     else updateQuantity(item.product_id, item.quantity - 1)
@@ -129,17 +135,20 @@ const CartDrawer = ({ isOpen, onClose }) => {
                                                 {item.quantity}
                                             </span>
                                             <button
+                                                type="button"
+                                                aria-label={`Aumentar cantidad de ${item.name}`}
                                                 onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                                                className="w-7 h-7 flex items-center justify-center bg-gray-200 hover:bg-orange-100 hover:text-orange-500 rounded-lg transition">
+                                                className="w-7 h-7 flex items-center justify-center bg-gray-200 hover:bg-orange-100 hover:text-orange-700 rounded-lg transition">
                                                 <Plus size={12} />
                                             </button>
                                         </div>
                                         ) : (
-                                            <p className="text-xs text-gray-400 mt-2">Asesoria profesional: contacto liberado al pagar</p>
+                                            <p className="text-xs text-gray-500 mt-2">Asesoria profesional: contacto liberado al pagar</p>
                                         )}
                                     </div>
-                                    <button onClick={() => item.item_type === "service" ? removeServiceFromCart(item.service_id) : removeFromCart(item.product_id)}
-                                        className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition shrink-0">
+                                    <button type="button" onClick={() => item.item_type === "service" ? removeServiceFromCart(item.service_id) : removeFromCart(item.product_id)}
+                                        aria-label={`Eliminar ${item.name} del carrito`}
+                                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition shrink-0">
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
@@ -157,13 +166,30 @@ const CartDrawer = ({ isOpen, onClose }) => {
                                 ${total.toLocaleString("es-CL")}
                             </span>
                         </div>
-                        <button onClick={handleCheckout}
-                            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold text-lg transition shadow-md">
+                        <button type="button" onClick={handleCheckout}
+                            className="w-full brand-button-dark py-4 rounded-xl font-bold text-lg transition shadow-md">
                             Ir a Pagar
                         </button>
                     </div>
                 )}
             </div>
+
+            {confirmClear && (
+                <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900">Vaciar carrito</h2>
+                        <p className="text-sm text-gray-500 mt-2">Se quitaran todos los productos y servicios del carrito.</p>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button type="button" onClick={() => setConfirmClear(false)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600">
+                                Cancelar
+                            </button>
+                            <button type="button" onClick={confirmClearCart} className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700">
+                                Vaciar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     )
 }

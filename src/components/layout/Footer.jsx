@@ -9,15 +9,17 @@ const social = [
 
 const Footer = () => {
     return (
-        <footer className="bg-slate-900 text-white">
+        <footer className="brand-gradient-x text-white">
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 border-b border-slate-700 pb-6">
                     <div className="flex items-center gap-3">
                         {social.map(({ icon: Icon, label }) => (
                             <button
                                 key={label}
-                                className="w-9 h-9 rounded-full bg-slate-700 text-slate-100 flex items-center justify-center hover:bg-orange-500 transition"
+                                type="button"
+                                className="w-9 h-9 rounded-full bg-white/10 text-slate-100 flex items-center justify-center hover:bg-white/20 transition"
                                 title={label}
+                                aria-label={label}
                             >
                                 <Icon size={17} />
                             </button>

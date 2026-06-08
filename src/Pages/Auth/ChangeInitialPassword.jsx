@@ -55,9 +55,9 @@ const ChangeInitialPassword = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-lg w-full max-w-md p-8">
-                <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-5">
+        <div className="min-h-screen brand-page flex items-center justify-center px-4 py-10">
+            <div className="brand-card rounded-2xl border shadow-xl w-full max-w-md p-8">
+                <div className="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center mb-5">
                     <LockKeyhole size={24} />
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Cambia tu contraseña inicial</h1>
@@ -78,7 +78,7 @@ const ChangeInitialPassword = () => {
                             type="password"
                             value={form.password}
                             onChange={(e) => setForm({ ...form, password: e.target.value })}
-                            className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                            className="mt-2 w-full rounded-xl border border-teal-100 bg-white/80 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
                             required
                         />
                     </label>
@@ -88,14 +88,14 @@ const ChangeInitialPassword = () => {
                             type="password"
                             value={form.confirm}
                             onChange={(e) => setForm({ ...form, confirm: e.target.value })}
-                            className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                            className="mt-2 w-full rounded-xl border border-teal-100 bg-white/80 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
                             required
                         />
                     </label>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition"
+                        className="w-full brand-button-dark disabled:opacity-60 py-3 rounded-xl font-semibold transition"
                     >
                         {loading ? "Guardando..." : "Guardar nueva contraseña"}
                     </button>

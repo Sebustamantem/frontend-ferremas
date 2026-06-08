@@ -54,6 +54,7 @@ const MyServices = () => {
     const [success, setSuccess] = useState("")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [deleteDraft, setDeleteDraft] = useState(null)
 
     const selectedRegion = regions.find((region) => region.name === form.region)
 
@@ -150,19 +151,26 @@ const MyServices = () => {
     const toggleService = async (service) => {
         try {
             await api.put(`/services/${service.id}/status`, { is_active: !service.is_active })
+            setSuccess(service.is_active ? "Servicio pausado correctamente" : "Servicio activado correctamente")
             await fetchPanel()
         } catch (err) {
-            alert(err.response?.data?.message || "No se pudo cambiar el estado")
+            setError(err.response?.data?.message || "No se pudo cambiar el estado")
         }
     }
 
     const deleteService = async (service) => {
-        if (!confirm(`Eliminar el servicio "${service.title}"?`)) return
+        setDeleteDraft(service)
+    }
+
+    const confirmDeleteService = async () => {
+        if (!deleteDraft) return
         try {
-            await api.delete(`/services/${service.id}`)
+            await api.delete(`/services/${deleteDraft.id}`)
+            setSuccess("Servicio eliminado correctamente")
+            setDeleteDraft(null)
             await fetchPanel()
         } catch (err) {
-            alert(err.response?.data?.message || "No se pudo eliminar el servicio")
+            setError(err.response?.data?.message || "No se pudo eliminar el servicio")
         }
     }
 
@@ -354,6 +362,23 @@ const MyServices = () => {
                     </section>
                 </div>
             </div>
+
+            {deleteDraft && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900">Eliminar servicio</h2>
+                        <p className="text-sm text-gray-500 mt-2">Eliminar el servicio "{deleteDraft.title}"?</p>
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button type="button" onClick={() => setDeleteDraft(null)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600">
+                                Cancelar
+                            </button>
+                            <button type="button" onClick={confirmDeleteService} className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
