@@ -19,7 +19,7 @@ const ForgotPassword = () => {
             const res = await forgotPassword({ email })
             setMessage(res.data.message || "Revisa tu correo para continuar")
         } catch (err) {
-            setError(err.response?.data?.message || "No se pudo solicitar la recuperación")
+            setError(err.response?.data?.error || err.response?.data?.message || "No se pudo solicitar la recuperación")
         } finally {
             setLoading(false)
         }
