@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { CheckCircle, Coins, ShoppingBag } from "lucide-react"
+import { CheckCircle, Coins, Download, ShoppingBag } from "lucide-react"
 import { QRCodeSVG } from "qrcode.react"
 import api from "../../api/axios"
+import { openOrderPdf } from "../../utils/orderPdf"
 
 const Success = () => {
     const [searchParams] = useSearchParams()
@@ -148,6 +149,15 @@ const Success = () => {
                     >
                         Seguir comprando
                     </button>
+                    {order && (
+                        <button
+                            onClick={() => openOrderPdf(order)}
+                            className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2"
+                        >
+                            <Download size={18} />
+                            Descargar resumen PDF
+                        </button>
+                    )}
                     <button
                         onClick={() => navigate("/mis-pedidos")}
                         className="w-full border border-gray-200 text-gray-600 hover:bg-gray-50 py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2"

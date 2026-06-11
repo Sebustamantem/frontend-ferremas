@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { CheckCircle2, ChevronRight, Clock, Package, Truck, XCircle } from "lucide-react"
+import { CheckCircle2, ChevronRight, Clock, Download, Package, Truck, XCircle } from "lucide-react"
 import api from "../../api/axios"
+import { openOrderPdf } from "../../utils/orderPdf"
 
 const formatDate = (value) => {
     if (!value) return "Fecha no disponible"
@@ -117,7 +118,7 @@ const OrderHistory = () => {
                                     <p className="text-sm text-gray-500">{formatDate(order.created_at || order.createdAt)}</p>
                                 </div>
 
-                                <div className="flex items-center gap-6">
+                                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                                     <div>
                                         <p className="text-xs text-gray-400">Estado</p>
                                         <p className="text-sm font-semibold text-gray-700">{statusLabels[order.status] || order.status || "Procesando"}</p>
@@ -126,6 +127,14 @@ const OrderHistory = () => {
                                         <p className="text-xs text-gray-400">Total</p>
                                         <p className="text-base font-bold text-orange-600">{formatPrice(order.total)}</p>
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => openOrderPdf(order)}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 transition"
+                                    >
+                                        <Download size={16} />
+                                        PDF
+                                    </button>
                                 </div>
                             </div>
                             <OrderTracker status={order.status} />

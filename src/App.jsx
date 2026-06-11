@@ -28,6 +28,8 @@ const OrderHistory = lazy(() => import("./Pages/Orders/OrderHistory"))
 const Profile = lazy(() => import("./Pages/Profile/Profile"))
 const Favorites = lazy(() => import("./Pages/Favorites/Favorites"))
 const ChangeInitialPassword = lazy(() => import("./Pages/Auth/ChangeInitialPassword"))
+const ForgotPassword = lazy(() => import("./Pages/Auth/ForgotPassword"))
+const ResetPassword = lazy(() => import("./Pages/Auth/ResetPassword"))
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth()
@@ -87,6 +89,8 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<HomeRoute />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/olvide-password" element={<ForgotPassword />} />
+          <Route path="/recuperar-password/:token" element={<ResetPassword />} />
           <Route path="/cambiar-password" element={<ProtectedRoute><ChangeInitialPassword /></ProtectedRoute>} />
           <Route path="/register" element={<Register />} />
           <Route path="/registro-pro" element={<RegisterPro />} />

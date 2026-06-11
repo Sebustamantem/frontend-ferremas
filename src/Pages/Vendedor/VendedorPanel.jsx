@@ -1,8 +1,9 @@
 import { Fragment, createElement, useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Eye, PackageCheck, RefreshCw, ShoppingBag, TrendingUp, Users } from "lucide-react"
+import { CreditCard, Download, Eye, MapPin, PackageCheck, RefreshCw, ShoppingBag, Star, TrendingUp, Users } from "lucide-react"
 import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
+import { openOrderPdf } from "../../utils/orderPdf"
 
 const statusColors = {
     pending: "bg-yellow-100 text-yellow-700",
@@ -45,6 +46,9 @@ const VendedorPanel = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
     const [selectedOrder, setSelectedOrder] = useState(null)
+    const [selectedClientId, setSelectedClientId] = useState(null)
+    const [clientDetail, setClientDetail] = useState(null)
+    const [loadingClientId, setLoadingClientId] = useState(null)
     const [updatingOrderId, setUpdatingOrderId] = useState(null)
     const [notice, setNotice] = useState(null)
 
@@ -84,6 +88,26 @@ const VendedorPanel = () => {
             setNotice({ type: "error", message: err.response?.data?.message || "Error al actualizar el estado" })
         } finally {
             setUpdatingOrderId(null)
+        }
+    }
+
+    const handleClientDetail = async (clientId) => {
+        if (selectedClientId === clientId) {
+            setSelectedClientId(null)
+            setClientDetail(null)
+            return
+        }
+        setSelectedClientId(clientId)
+        setClientDetail(null)
+        setLoadingClientId(clientId)
+        try {
+            const res = await api.get(`/staff/clients/${clientId}`)
+            setClientDetail(res.data)
+        } catch (err) {
+            setNotice({ type: "error", message: err.response?.data?.message || "No se pudo cargar la ficha del cliente" })
+            setSelectedClientId(null)
+        } finally {
+            setLoadingClientId(null)
         }
     }
 
@@ -162,7 +186,13 @@ const VendedorPanel = () => {
                         onStatusChange={handleStatusChange}
                     />
                 ) : (
-                    <ClientsTable clients={clients} />
+                    <ClientsTable
+                        clients={clients}
+                        selectedClientId={selectedClientId}
+                        clientDetail={clientDetail}
+                        loadingClientId={loadingClientId}
+                        onClientDetail={handleClientDetail}
+                    />
                 )}
             </div>
         </div>
@@ -221,7 +251,7 @@ const OrdersTable = ({ orders, selectedOrder, updatingOrderId, onSelectOrder, on
                         <th className="px-6 py-4 text-left">Total</th>
                         <th className="px-6 py-4 text-left">Estado</th>
                         <th className="px-6 py-4 text-left">Fecha</th>
-                        <th className="px-6 py-4 text-center">Detalle</th>
+                        <th className="px-6 py-4 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -260,6 +290,14 @@ const OrdersTable = ({ orders, selectedOrder, updatingOrderId, onSelectOrder, on
                                     >
                                         <Eye size={16} />
                                         {selectedOrder?.id === order.id ? "Ocultar" : "Ver"}
+                                    </button>
+                                    <button
+                                        onClick={() => openOrderPdf(order)}
+                                        className="ml-2 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition"
+                                        title="Descargar resumen PDF"
+                                    >
+                                        <Download size={15} />
+                                        PDF
                                     </button>
                                 </td>
                             </tr>
@@ -314,55 +352,196 @@ const OrderDetail = ({ order }) => (
     </div>
 )
 
-const ClientsTable = ({ clients }) => (
+const ClientsTable = ({ clients, selectedClientId, clientDetail, loadingClientId, onClientDetail }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[800px]">
+            <table className="w-full text-sm min-w-[980px]">
                 <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
                     <tr>
                         <th className="px-6 py-4 text-left">Cliente</th>
                         <th className="px-6 py-4 text-left">RUT</th>
                         <th className="px-6 py-4 text-left">Telefono</th>
                         <th className="px-6 py-4 text-left">Tipo</th>
+                        <th className="px-6 py-4 text-left">Compras</th>
+                        <th className="px-6 py-4 text-left">Puntos</th>
                         <th className="px-6 py-4 text-left">Registro</th>
+                        <th className="px-6 py-4 text-center">Ficha</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {clients.map((client) => (
-                        <tr key={client.id} className="hover:bg-gray-50 transition">
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">
-                                        {client.name?.charAt(0).toUpperCase()}
+                        <Fragment key={client.id}>
+                            <tr className="hover:bg-gray-50 transition">
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">
+                                            {client.name?.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-800">{client.name} {client.lastname}</p>
+                                            <p className="text-gray-400 text-xs">{client.email}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-800">{client.name} {client.lastname}</p>
-                                        <p className="text-gray-400 text-xs">{client.email}</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 text-gray-600">{client.rut || "-"}</td>
-                            <td className="px-6 py-4 text-gray-600">{client.phone || "-"}</td>
-                            <td className="px-6 py-4">
-                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${client.user_type === "maestro"
-                                    ? "bg-orange-100 text-orange-600"
-                                    : client.user_type === "pyme"
-                                        ? "bg-blue-100 text-blue-600"
-                                        : "bg-gray-100 text-gray-600"
-                                    }`}>
-                                    {client.user_type || "cliente"}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 text-gray-400 text-xs">
-                                {new Date(client.created_at).toLocaleDateString("es-CL")}
-                            </td>
-                        </tr>
+                                </td>
+                                <td className="px-6 py-4 text-gray-600">{client.rut || "-"}</td>
+                                <td className="px-6 py-4 text-gray-600">{client.phone || "-"}</td>
+                                <td className="px-6 py-4">
+                                    <ClientTypeBadge type={client.user_type} />
+                                </td>
+                                <td className="px-6 py-4">
+                                    <p className="font-semibold text-gray-800">{client.order_count || 0}</p>
+                                    <p className="text-xs text-gray-400">{formatCurrency(client.total_spent)}</p>
+                                </td>
+                                <td className="px-6 py-4 text-gray-600">{client.points_balance || 0}</td>
+                                <td className="px-6 py-4 text-gray-400 text-xs">
+                                    {new Date(client.created_at).toLocaleDateString("es-CL")}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => onClientDetail(client.id)}
+                                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition ${selectedClientId === client.id
+                                            ? "bg-blue-500 text-white"
+                                            : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                                            }`}
+                                    >
+                                        <Eye size={15} />
+                                        {loadingClientId === client.id ? "Cargando..." : selectedClientId === client.id ? "Ocultar" : "Ver"}
+                                    </button>
+                                </td>
+                            </tr>
+                            {selectedClientId === client.id && (
+                                <tr>
+                                    <td colSpan={8} className="p-0">
+                                        <ClientDetailPanel detail={clientDetail} fallbackClient={client} loading={loadingClientId === client.id} />
+                                    </td>
+                                </tr>
+                            )}
+                        </Fragment>
                     ))}
                 </tbody>
             </table>
         </div>
         {clients.length === 0 && <EmptyState text="No hay clientes registrados" />}
     </div>
+)
+
+const ClientTypeBadge = ({ type }) => (
+    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${type === "maestro"
+        ? "bg-orange-100 text-orange-600"
+        : type === "pyme"
+            ? "bg-blue-100 text-blue-600"
+            : type?.includes("pending")
+                ? "bg-yellow-100 text-yellow-700"
+                : "bg-gray-100 text-gray-600"
+        }`}>
+        {type || "cliente"}
+    </span>
+)
+
+const ClientDetailPanel = ({ detail, fallbackClient, loading }) => {
+    if (loading || !detail) {
+        return (
+            <div className="bg-slate-50 border-t border-gray-100 p-6 text-sm text-gray-400">
+                Cargando ficha del cliente...
+            </div>
+        )
+    }
+
+    const client = detail.client || fallbackClient
+    const credit = detail.ferre_credit
+    const availableCredit = credit ? Number(credit.credit_limit || 0) - Number(credit.balance_used || 0) : 0
+
+    return (
+        <div className="bg-slate-50 border-t border-gray-100 p-5">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-5">
+                <MiniInfo icon={MapPin} label="Direccion" value={formatAddress(client.address)} />
+                <MiniInfo icon={Star} label="Puntos" value={`${detail.points?.balance || 0} puntos`} />
+                <MiniInfo icon={CreditCard} label="FerreCredito" value={credit ? `${formatCurrency(availableCredit)} disponible` : "Sin credito"} />
+                <MiniInfo icon={ShoppingBag} label="Compras" value={`${detail.orders?.length || 0} recientes`} />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <section className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                        <h3 className="font-bold text-gray-800">Compras recientes</h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                        {detail.orders?.length ? detail.orders.map((order) => (
+                            <div key={order.id} className="p-4 flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="font-semibold text-gray-800">Pedido #{order.id}</p>
+                                    <p className="text-xs text-gray-400">{statusLabels[order.status] || order.status} | {new Date(order.created_at).toLocaleDateString("es-CL")}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <p className="font-bold text-orange-600">{formatCurrency(order.total)}</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => openOrderPdf({ ...order, user_name: client.name, user_lastname: client.lastname, user_email: client.email, user_phone: client.phone })}
+                                        className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+                                    >
+                                        <Download size={14} />
+                                        PDF
+                                    </button>
+                                </div>
+                            </div>
+                        )) : <EmptyInline text="Sin compras registradas" />}
+                    </div>
+                </section>
+
+                <section className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                        <h3 className="font-bold text-gray-800">Puntos e historial</h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                        {detail.points?.transactions?.length ? detail.points.transactions.map((tx) => (
+                            <div key={tx.id} className="p-4 flex justify-between gap-4">
+                                <div>
+                                    <p className="font-semibold text-gray-800">{tx.description || tx.type}</p>
+                                    <p className="text-xs text-gray-400">{new Date(tx.created_at).toLocaleDateString("es-CL")}</p>
+                                </div>
+                                <p className={`font-bold ${tx.type === "used" ? "text-red-600" : "text-green-600"}`}>
+                                    {tx.type === "used" ? "-" : "+"}{tx.points}
+                                </p>
+                            </div>
+                        )) : <EmptyInline text="Sin movimientos de puntos" />}
+                    </div>
+                </section>
+            </div>
+
+            {detail.ferre_credit_installments?.length > 0 && (
+                <section className="bg-white rounded-lg border border-gray-100 overflow-hidden mt-4">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                        <h3 className="font-bold text-gray-800">Cuotas FerreCredito</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 p-4">
+                        {detail.ferre_credit_installments.map((inst) => (
+                            <div key={inst.id} className="rounded-lg border border-gray-100 p-4">
+                                <p className="font-semibold text-gray-800">Pedido #{inst.order_id}</p>
+                                <p className="text-sm text-gray-500">{inst.paid_installments}/{inst.installments} cuotas pagadas</p>
+                                <p className="text-sm font-bold text-orange-600 mt-1">{formatCurrency(inst.amount_per_installment)} / cuota</p>
+                                <p className="text-xs text-gray-400 mt-1">Vence: {inst.due_date ? new Date(inst.due_date).toLocaleDateString("es-CL") : "Sin fecha"}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+        </div>
+    )
+}
+
+const MiniInfo = ({ icon: Icon, label, value }) => (
+    <div className="bg-white rounded-lg border border-gray-100 p-4">
+        <div className="flex items-center gap-2 text-gray-400 text-xs font-semibold uppercase">
+            <Icon size={15} />
+            {label}
+        </div>
+        <p className="text-sm font-bold text-gray-800 mt-2 break-words">{value}</p>
+    </div>
+)
+
+const EmptyInline = ({ text }) => (
+    <div className="p-6 text-center text-sm text-gray-400">{text}</div>
 )
 
 const EmptyState = ({ text }) => (

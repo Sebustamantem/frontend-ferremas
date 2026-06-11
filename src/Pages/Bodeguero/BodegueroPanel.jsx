@@ -31,6 +31,7 @@ const BodegueroPanel = () => {
     const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState("inventory")
     const [inventory, setInventory] = useState([])
+    const [stockReports, setStockReports] = useState([])
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
@@ -53,11 +54,13 @@ const BodegueroPanel = () => {
         setLoading(true)
         setError("")
         try {
-            const [inventoryRes, ordersRes] = await Promise.all([
+            const [inventoryRes, reportsRes, ordersRes] = await Promise.all([
                 api.get("/staff/inventory"),
+                api.get("/staff/inventory/reports/my"),
                 api.get("/staff/warehouse/orders"),
             ])
             setInventory(inventoryRes.data)
+            setStockReports(reportsRes.data)
             setOrders(ordersRes.data)
         } catch (err) {
             setError(err.response?.data?.message || "No se pudo cargar el panel de bodeguero")
@@ -184,6 +187,7 @@ const BodegueroPanel = () => {
                 ) : activeTab === "inventory" ? (
                     <InventoryTable
                         products={inventory}
+                        stockReports={stockReports}
                         reportingProductId={reportingProductId}
                         onReportStockIssue={(product) => setReportDraft({
                             product,
@@ -286,9 +290,13 @@ const LoadingState = () => (
 
 const InventoryTable = ({
     products,
+    stockReports,
     reportingProductId,
     onReportStockIssue,
-}) => (
+}) => {
+    const reportedProductIds = new Set((stockReports || []).map((report) => Number(report.product_id)))
+
+    return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[900px]">
@@ -320,7 +328,12 @@ const InventoryTable = ({
                                 <StockBadge stock={Number(product.stock || 0)} />
                             </td>
                             <td className="px-6 py-4 text-center">
-                                {Number(product.stock || 0) === 0 ? (
+                                {Number(product.stock || 0) === 0 && reportedProductIds.has(Number(product.id)) ? (
+                                    <span className="inline-flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-100 text-xs px-4 py-2 rounded-lg font-semibold">
+                                        <Check size={14} />
+                                        Aviso enviado
+                                    </span>
+                                ) : Number(product.stock || 0) === 0 ? (
                                     <button
                                         onClick={() => onReportStockIssue(product)}
                                         disabled={reportingProductId === product.id}
@@ -342,7 +355,8 @@ const InventoryTable = ({
         </div>
         {products.length === 0 && <EmptyState text="No hay productos en inventario" />}
     </div>
-)
+    )
+}
 
 const StockBadge = ({ stock }) => {
     const className = stock === 0

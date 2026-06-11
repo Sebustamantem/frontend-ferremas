@@ -17,6 +17,7 @@ const Navbar = () => {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [notifications, setNotifications] = useState({ total: 0, items: [], counts: {} })
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [isClearingNotifications, setIsClearingNotifications] = useState(false)
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
   const navigate = useNavigate()
@@ -96,6 +97,29 @@ const Navbar = () => {
     logout()
     setIsUserMenuOpen(false)
     navigate("/")
+  }
+
+  const handleClearNotifications = async () => {
+    if (!notifications.total || isClearingNotifications) return
+    setIsClearingNotifications(true)
+    try {
+      await api.post("/staff/admin/notifications/clear")
+      setNotifications({
+        total: 0,
+        items: [],
+        counts: {
+          stock_reports: 0,
+          credit_applications: 0,
+          pending_orders: 0,
+          transfer_pending: 0,
+          out_of_stock: 0,
+        },
+      })
+    } catch (err) {
+      console.error("Error vaciando notificaciones:", err)
+    } finally {
+      setIsClearingNotifications(false)
+    }
   }
 
   const handleSearch = (event) => {
@@ -299,9 +323,19 @@ const Navbar = () => {
 
                   {isNotificationsOpen && (
                     <div className="absolute right-0 top-12 bg-white rounded-2xl shadow-xl w-[min(22rem,calc(100vw-1.5rem))] z-50 border border-gray-100 overflow-hidden">
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-bold text-gray-900">Notificaciones internas</p>
-                        <p className="text-xs text-gray-500">{notifications.total || 0} pendientes por revisar</p>
+                      <div className="px-4 py-3 border-b border-gray-100 flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">Notificaciones internas</p>
+                          <p className="text-xs text-gray-500">{notifications.total || 0} pendientes por revisar</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleClearNotifications}
+                          disabled={!notifications.total || isClearingNotifications}
+                          className="shrink-0 rounded-lg border border-orange-200 px-3 py-1.5 text-xs font-bold text-orange-700 hover:bg-orange-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-white transition"
+                        >
+                          {isClearingNotifications ? "Vaciando..." : "Vaciar"}
+                        </button>
                       </div>
                       <div className="grid grid-cols-2 gap-2 p-3 border-b border-gray-100 bg-gray-50">
                         <NotificationCount label="Bodega" value={notifications.counts?.stock_reports} />

@@ -5,9 +5,11 @@ import {
     Boxes,
     CheckCircle,
     CreditCard,
+    History,
     MessageSquareWarning,
     Pencil,
     Plus,
+    PackagePlus,
     Search,
     Trash2,
     Upload,
@@ -50,8 +52,12 @@ const AdminProducts = () => {
     const [stockFilter, setStockFilter] = useState("all")
     const [reportFilter, setReportFilter] = useState("all")
     const [stockReports, setStockReports] = useState([])
+    const [stockMovements, setStockMovements] = useState([])
     const [notice, setNotice] = useState(null)
     const [deleteTarget, setDeleteTarget] = useState(null)
+    const [restockTarget, setRestockTarget] = useState(null)
+    const [restockForm, setRestockForm] = useState({ quantity: "", reason: "" })
+    const [restocking, setRestocking] = useState(false)
 
     useEffect(() => {
         if (!user || user.role !== "admin") {
@@ -60,6 +66,7 @@ const AdminProducts = () => {
         }
         fetchProducts()
         fetchStockReports()
+        fetchStockMovements()
     }, [user, navigate])
 
     const fetchProducts = async () => {
@@ -78,6 +85,15 @@ const AdminProducts = () => {
         try {
             const res = await api.get("/staff/admin/stock-reports")
             setStockReports(res.data)
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    const fetchStockMovements = async () => {
+        try {
+            const res = await api.get("/staff/inventory/stock-movements")
+            setStockMovements(res.data || [])
         } catch (err) {
             console.error(err)
         }
@@ -192,6 +208,27 @@ const AdminProducts = () => {
         setDeleteTarget(products.find((product) => product.id === id))
     }
 
+    const handleOpenRestock = (product) => {
+        setRestockTarget(product)
+        setRestockForm({ quantity: "", reason: "" })
+    }
+
+    const handleRestock = async (event) => {
+        event.preventDefault()
+        if (!restockTarget) return
+        setRestocking(true)
+        try {
+            await api.post(`/staff/inventory/${restockTarget.id}/restock`, restockForm)
+            setNotice({ type: "success", message: "Reposicion de stock registrada correctamente." })
+            setRestockTarget(null)
+            await Promise.all([fetchProducts(), fetchStockReports(), fetchStockMovements()])
+        } catch (err) {
+            setNotice({ type: "error", message: err.response?.data?.message || "No se pudo registrar la reposicion" })
+        } finally {
+            setRestocking(false)
+        }
+    }
+
     const confirmDelete = async () => {
         if (!deleteTarget) return
         try {
@@ -233,6 +270,20 @@ const AdminProducts = () => {
             reportado_por: `${report.reporter_name || ""} ${report.reporter_lastname || ""}`.trim(),
             motivo: report.reason,
             fecha: report.created_at,
+        })))
+    }
+
+    const exportStockMovements = () => {
+        downloadCsv("ferremas-reposiciones-stock.csv", stockMovements.map((movement) => ({
+            id: movement.id,
+            producto: movement.product_name || "Producto eliminado",
+            tipo: movement.movement_type,
+            cantidad: Number(movement.quantity || 0),
+            stock_anterior: Number(movement.previous_stock || 0),
+            stock_nuevo: Number(movement.new_stock || 0),
+            usuario: `${movement.user_name || "Sistema"} ${movement.user_lastname || ""}`.trim(),
+            motivo: movement.reason || "",
+            fecha: movement.created_at,
         })))
     }
 
@@ -283,6 +334,7 @@ const AdminProducts = () => {
                                     items={[
                                         { label: "Catalogo visible", description: "Respeta busqueda y filtros actuales", onClick: exportProducts },
                                         { label: "Reportes de bodega", description: "Pendientes y resueltos", onClick: exportStockReports },
+                                        { label: "Reposiciones", description: "Historial de entradas de stock", onClick: exportStockMovements },
                                     ]}
                                 />
                             </div>
@@ -465,6 +517,13 @@ const AdminProducts = () => {
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
+                                                            onClick={() => handleOpenRestock(product)}
+                                                            className="inline-flex items-center justify-center w-9 h-9 text-green-600 hover:bg-green-50 rounded-lg transition"
+                                                            title="Reponer stock"
+                                                        >
+                                                            <PackagePlus size={16} />
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleEdit(product)}
                                                             className="inline-flex items-center justify-center w-9 h-9 text-blue-500 hover:bg-blue-50 rounded-lg transition"
                                                             title="Editar"
@@ -488,6 +547,49 @@ const AdminProducts = () => {
                         </div>
                     )}
                 </div>
+
+                <section className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden mt-6">
+                    <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <History size={18} className="text-orange-500" />
+                                Historial de reposiciones
+                            </h2>
+                            <p className="text-sm text-gray-400">Ultimas entradas de inventario registradas por admin.</p>
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm min-w-[840px]">
+                            <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th className="px-6 py-4 text-left">Producto</th>
+                                    <th className="px-6 py-4 text-left">Cantidad</th>
+                                    <th className="px-6 py-4 text-left">Stock</th>
+                                    <th className="px-6 py-4 text-left">Usuario</th>
+                                    <th className="px-6 py-4 text-left">Motivo</th>
+                                    <th className="px-6 py-4 text-left">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {stockMovements.slice(0, 8).map((movement) => (
+                                    <tr key={movement.id}>
+                                        <td className="px-6 py-4 font-semibold text-gray-800">{movement.product_name || "Producto eliminado"}</td>
+                                        <td className="px-6 py-4 text-green-700 font-bold">+{movement.quantity}</td>
+                                        <td className="px-6 py-4 text-gray-600">{movement.previous_stock} a {movement.new_stock}</td>
+                                        <td className="px-6 py-4 text-gray-600">{`${movement.user_name || "Sistema"} ${movement.user_lastname || ""}`.trim()}</td>
+                                        <td className="px-6 py-4 text-gray-500">{movement.reason || "-"}</td>
+                                        <td className="px-6 py-4 text-gray-400 text-xs">{new Date(movement.created_at).toLocaleDateString("es-CL")}</td>
+                                    </tr>
+                                ))}
+                                {stockMovements.length === 0 && (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-400">Sin reposiciones registradas.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
 
             {showModal && (
@@ -621,6 +723,57 @@ const AdminProducts = () => {
                                 Eliminar
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {restockTarget && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
+                        <h2 className="text-lg font-bold text-gray-900">Reponer stock</h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            {restockTarget.name} tiene {restockTarget.stock} unidades actuales.
+                        </p>
+                        <form onSubmit={handleRestock} className="mt-5 space-y-4">
+                            <div>
+                                <label className="text-sm font-semibold text-gray-700">Cantidad que ingresa</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    required
+                                    value={restockForm.quantity}
+                                    onChange={(event) => setRestockForm((current) => ({ ...current, quantity: event.target.value }))}
+                                    className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    placeholder="Ej: 20"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-semibold text-gray-700">Motivo o proveedor</label>
+                                <textarea
+                                    rows={3}
+                                    value={restockForm.reason}
+                                    onChange={(event) => setRestockForm((current) => ({ ...current, reason: event.target.value }))}
+                                    className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                                    placeholder="Compra a proveedor, ajuste por recepcion, etc."
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setRestockTarget(null)}
+                                    className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={restocking}
+                                    className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-60"
+                                >
+                                    {restocking ? "Registrando..." : "Registrar entrada"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -12,6 +12,7 @@ import {
     ShoppingBag,
     Star,
     TriangleAlert,
+    XCircle,
     Users,
 } from "lucide-react"
 import api from "../../api/axios"
@@ -48,6 +49,7 @@ const AdminDashboard = () => {
     const [activityFilters, setActivityFilters] = useState({ action: "", entity_type: "", date_from: "", date_to: "" })
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
+    const [notice, setNotice] = useState(null)
 
     useEffect(() => {
         if (!user || user.role !== "admin") {
@@ -109,6 +111,17 @@ const AdminDashboard = () => {
         })))
     }
 
+    const cancelPendingOrders = async () => {
+        setNotice(null)
+        try {
+            const res = await api.post("/staff/admin/pending-orders/cancel")
+            setNotice({ type: "success", message: res.data?.message || "Pedidos pendientes cancelados." })
+            await fetchDashboard()
+        } catch (err) {
+            setNotice({ type: "error", message: err.response?.data?.message || "No se pudieron cancelar los pendientes." })
+        }
+    }
+
     const satisfaction = useMemo(() => {
         const average = Number(dashboard?.surveys?.average_rating || 0)
         return average > 0 ? `${average.toFixed(1)} / 5` : "Sin datos"
@@ -130,6 +143,7 @@ const AdminDashboard = () => {
                             <div className="flex flex-wrap gap-2">
                                 <NavButton icon={Boxes} label="Productos" onClick={() => navigate("/admin/products")} />
                                 <NavButton icon={Users} label="Usuarios" onClick={() => navigate("/admin/users")} />
+                                <NavButton icon={Users} label="Clientes" onClick={() => navigate("/vendedor")} />
                                 <NavButton icon={CreditCard} label="Creditos" onClick={() => navigate("/admin/credits")} />
                                 <button
                                     onClick={fetchDashboard}
@@ -137,6 +151,13 @@ const AdminDashboard = () => {
                                 >
                                     <RefreshCw size={16} />
                                     Actualizar
+                                </button>
+                                <button
+                                    onClick={cancelPendingOrders}
+                                    className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                >
+                                    <XCircle size={16} />
+                                    Cancelar pendientes
                                 </button>
                                 <ExportMenu
                                     dark
@@ -153,6 +174,18 @@ const AdminDashboard = () => {
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-6">
                         {error}
+                    </div>
+                )}
+
+                {notice && (
+                    <div className={`rounded-lg px-4 py-3 text-sm mb-6 border ${notice.type === "success"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-red-50 border-red-200 text-red-700"
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <span>{notice.message}</span>
+                            <button type="button" onClick={() => setNotice(null)} className="font-bold">Cerrar</button>
+                        </div>
                     </div>
                 )}
 
