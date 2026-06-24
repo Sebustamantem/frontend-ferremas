@@ -143,7 +143,7 @@ const AdminDashboard = () => {
                             <div className="flex flex-wrap gap-2">
                                 <NavButton icon={Boxes} label="Productos" onClick={() => navigate("/admin/products")} />
                                 <NavButton icon={Users} label="Usuarios" onClick={() => navigate("/admin/users")} />
-                                <NavButton icon={Users} label="Clientes" onClick={() => navigate("/vendedor")} />
+                                <NavButton icon={Users} label="Clientes" onClick={() => navigate("/admin/users")} />
                                 <NavButton icon={CreditCard} label="Creditos" onClick={() => navigate("/admin/credits")} />
                                 <button
                                     onClick={fetchDashboard}

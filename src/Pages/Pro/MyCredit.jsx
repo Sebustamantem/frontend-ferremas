@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import {
     AlertTriangle,
     ArrowLeft,
@@ -15,6 +15,14 @@ import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
 
 const formatCurrency = (value) => `$${Number(value || 0).toLocaleString("es-CL")}`
+
+const getRemainingDebt = (item) => {
+    const paidAmount = Math.max(
+        Number(item.paid_amount || 0),
+        Number(item.paid_installments || 0) * Number(item.amount_per_installment || 0)
+    )
+    return Math.max(Number(item.total_amount || 0) - paidAmount, 0)
+}
 
 const formatDate = (value) => {
     if (!value) return "Sin fecha"
@@ -68,15 +76,27 @@ const BADGE_CLASSES = {
 const MyCredit = () => {
     const { user } = useAuth()
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const [credit, setCredit] = useState(null)
     const [installments, setInstallments] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
+    const [notice, setNotice] = useState("")
+    const [paymentTarget, setPaymentTarget] = useState(null)
+    const [paymentType, setPaymentType] = useState("installment")
+    const [customAmount, setCustomAmount] = useState("")
+    const [payingId, setPayingId] = useState(null)
 
     useEffect(() => {
         if (!user) return
         fetchCredit()
     }, [user])
+
+    useEffect(() => {
+        const paymentStatus = searchParams.get("payment")
+        if (paymentStatus === "success") setNotice("Pago Webpay confirmado correctamente.")
+        if (paymentStatus === "failure") setError("No se pudo confirmar el pago Webpay.")
+    }, [searchParams])
 
     const fetchCredit = async () => {
         setLoading(true)
@@ -95,13 +115,43 @@ const MyCredit = () => {
         }
     }
 
+    const handleStartWebpayPayment = async () => {
+        if (!paymentTarget) return
+        setError("")
+        setNotice("")
+        setPayingId(paymentTarget.id)
+        try {
+            const res = await api.post(`/ferre-credit/installments/${paymentTarget.id}/webpay`, {
+                payment_type: paymentType,
+                amount: paymentType === "custom" ? customAmount : undefined,
+            })
+            const form = document.createElement("form")
+            form.method = "POST"
+            form.action = res.data.url
+
+            const input = document.createElement("input")
+            input.type = "hidden"
+            input.name = "token_ws"
+            input.value = res.data.token
+            form.appendChild(input)
+
+            document.body.appendChild(form)
+            form.submit()
+        } catch (err) {
+            setError(err.response?.data?.message || "No se pudo iniciar el pago Webpay")
+            setPayingId(null)
+        } finally {
+            setPaymentTarget(null)
+        }
+    }
+
     const summary = useMemo(() => {
         const limit = Number(credit?.credit_limit || 0)
         const used = Number(credit?.balance_used || 0)
         const available = Math.max(Number(credit?.available ?? limit - used), 0)
         const activeInstallments = installments.filter((item) => item.effective_status !== "completed")
         const overdueInstallments = installments.filter((item) => item.effective_status === "overdue")
-        const monthlyDebt = activeInstallments.reduce((acc, item) => acc + Number(item.amount_per_installment || 0), 0)
+        const monthlyDebt = activeInstallments.reduce((acc, item) => acc + Math.min(Number(item.amount_per_installment || 0), getRemainingDebt(item)), 0)
         const nextInstallment = [...activeInstallments]
             .sort((a, b) => new Date(a.due_date || a.created_at) - new Date(b.due_date || b.created_at))[0]
 
@@ -151,6 +201,11 @@ const MyCredit = () => {
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-6">
                         {error}
+                    </div>
+                )}
+                {notice && (
+                    <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm mb-6">
+                        {notice}
                     </div>
                 )}
 
@@ -257,9 +312,10 @@ const MyCredit = () => {
                                                 <th className="px-6 py-4 text-left">Total</th>
                                                 <th className="px-6 py-4 text-left">Cuotas</th>
                                                 <th className="px-6 py-4 text-left">Valor cuota</th>
-                                                <th className="px-6 py-4 text-left">Pagadas</th>
+                                                <th className="px-6 py-4 text-left">Pagado</th>
                                                 <th className="px-6 py-4 text-left">Próximo vencimiento</th>
                                                 <th className="px-6 py-4 text-left">Estado</th>
+                                                <th className="px-6 py-4 text-center">Acción</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
@@ -270,13 +326,36 @@ const MyCredit = () => {
                                                     <td className="px-6 py-4 text-gray-600">{item.installments}</td>
                                                     <td className="px-6 py-4 text-gray-600">{formatCurrency(item.amount_per_installment)}</td>
                                                     <td className="px-6 py-4">
-                                                        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700">
-                                                            {item.paid_installments}/{item.installments}
-                                                        </span>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 w-fit">
+                                                                {item.paid_installments}/{item.installments}
+                                                            </span>
+                                                            <span className="text-xs text-gray-400">
+                                                                {formatCurrency(Math.max(Number(item.paid_amount || 0), Number(item.paid_installments || 0) * Number(item.amount_per_installment || 0)))} abonado
+                                                            </span>
+                                                        </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-gray-600">{formatDate(item.due_date)}</td>
                                                     <td className="px-6 py-4">
                                                         <InstallmentStatus status={item.effective_status || item.status} />
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        {item.effective_status === "webpay_pending" ? (
+                                                            <span className="text-xs font-semibold text-orange-600">Webpay pendiente</span>
+                                                        ) : (item.effective_status || item.status) !== "completed" && getRemainingDebt(item) > 0 ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPaymentTarget(item)
+                                                                    setPaymentType("installment")
+                                                                    setCustomAmount("")
+                                                                }}
+                                                                disabled={payingId === item.id}
+                                                                className="rounded-xl bg-orange-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-orange-600 disabled:opacity-60"
+                                                            >
+                                                                {payingId === item.id ? "Redirigiendo..." : "Pagar cuota"}
+                                                            </button>
+                                                        ) : null}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -288,6 +367,69 @@ const MyCredit = () => {
                     </>
                 )}
             </div>
+
+            {paymentTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                        <h2 className="text-lg font-bold text-gray-900">Pagar FerreCredito</h2>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Orden #{paymentTarget.order_id} - deuda pendiente {formatCurrency(getRemainingDebt(paymentTarget))}
+                        </p>
+
+                        <div className="mt-5 grid gap-2">
+                            {[
+                                ["installment", `Pagar cuota: ${formatCurrency(Math.min(Number(paymentTarget.amount_per_installment || 0), getRemainingDebt(paymentTarget)))}`],
+                                ["total", `Pagar total: ${formatCurrency(getRemainingDebt(paymentTarget))}`],
+                                ["custom", "Abonar otro monto"],
+                            ].map(([value, label]) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => setPaymentType(value)}
+                                    className={`rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${paymentType === value
+                                        ? "border-orange-500 bg-orange-50 text-orange-700"
+                                        : "border-gray-200 text-gray-600 hover:border-orange-300"
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {paymentType === "custom" && (
+                            <div className="mt-4">
+                                <label className="text-sm font-semibold text-gray-700">Monto a abonar</label>
+                                <input
+                                    type="number"
+                                    min="1000"
+                                    max={getRemainingDebt(paymentTarget)}
+                                    value={customAmount}
+                                    onChange={(event) => setCustomAmount(event.target.value)}
+                                    className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    placeholder="Ej: 25000"
+                                />
+                            </div>
+                        )}
+
+                        <div className="mt-6 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPaymentTarget(null)}
+                                className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleStartWebpayPayment}
+                                className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600"
+                            >
+                                Ir a Webpay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -325,6 +467,8 @@ const InfoTile = ({ label, value }) => (
 const InstallmentStatus = ({ status }) => {
     const config = {
         completed: ["Completado", "bg-green-100 text-green-700"],
+        webpay_pending: ["Webpay pendiente", "bg-orange-100 text-orange-700"],
+        payment_pending: ["Pago informado", "bg-orange-100 text-orange-700"],
         overdue: ["Vencido", "bg-red-100 text-red-700"],
         active: ["Activo", "bg-blue-100 text-blue-700"],
     }[status] || ["Activo", "bg-blue-100 text-blue-700"]

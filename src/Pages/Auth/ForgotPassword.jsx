@@ -24,6 +24,11 @@ const ForgotPassword = () => {
 
         try {
             const res = await forgotPassword({ email })
+            if (res.data.code === "USER_NOT_REGISTERED") {
+                setNotRegistered(true)
+                setError(res.data.message || "Este correo no está registrado")
+                return
+            }
             setMessage(res.data.message || "Revisa tu correo para continuar")
         } catch (err) {
             if (err.response?.data?.code === "USER_NOT_REGISTERED") {

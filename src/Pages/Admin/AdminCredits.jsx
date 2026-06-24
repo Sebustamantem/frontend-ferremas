@@ -94,13 +94,13 @@ const AdminCredits = () => {
 
     const handlePayInstallment = async (installmentId) => {
         setConfirmAction({
-            title: "Registrar pago",
-            message: "Registrar pago de esta cuota?",
-            confirmLabel: "Registrar pago",
+            title: "Confirmar pago",
+            message: "Confirmar el pago informado por el cliente?",
+            confirmLabel: "Confirmar pago",
             tone: "success",
             run: async () => {
                 await api.post(`/ferre-credit/installments/${installmentId}/pay`)
-                setNotice({ type: "success", message: "Pago de cuota registrado." })
+                setNotice({ type: "success", message: "Pago de cuota confirmado." })
                 fetchInstallments()
             },
         })
@@ -112,7 +112,9 @@ const AdminCredits = () => {
             await confirmAction.run()
             setConfirmAction(null)
         } catch (err) {
-            setNotice({ type: "error", message: err.response?.data?.message || "No se pudo completar la accion" })
+            const data = err.response?.data || {}
+            const detail = data.error ? `: ${data.error}` : ""
+            setNotice({ type: "error", message: `${data.message || "No se pudo completar la accion"}${detail}` })
         }
     }
     const getCreditForUser = (userId) => credits.find(c => c.user_id === userId)
@@ -125,12 +127,16 @@ const AdminCredits = () => {
 
     const statusColors = {
         active: "bg-yellow-100 text-yellow-600",
+        webpay_pending: "bg-orange-100 text-orange-700",
+        payment_pending: "bg-orange-100 text-orange-700",
         completed: "bg-green-100 text-green-600",
         overdue: "bg-red-100 text-red-600",
     }
 
     const statusLabels = {
         active: "Pendiente",
+        webpay_pending: "Webpay pendiente",
+        payment_pending: "Pago informado",
         completed: "Pagada",
         overdue: "Vencida",
     }
@@ -392,13 +398,17 @@ const AdminCredits = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                {(inst.effective_status || inst.status) !== "completed" && inst.paid_installments < inst.installments && (
+                                                {(inst.effective_status || inst.status) === "webpay_pending" ? (
+                                                    <span className="text-xs font-semibold text-orange-600">Esperando Webpay</span>
+                                                ) : (inst.effective_status || inst.status) === "payment_pending" ? (
                                                     <button onClick={() => handlePayInstallment(inst.id)}
                                                         className="bg-green-500 hover:bg-green-600 text-white text-xs px-4 py-2 rounded-xl transition flex items-center gap-1 mx-auto">
                                                         <Check size={14} />
-                                                        Registrar pago
+                                                        Confirmar pago
                                                     </button>
-                                                )}
+                                                ) : (inst.effective_status || inst.status) !== "completed" && inst.paid_installments < inst.installments ? (
+                                                    <span className="text-xs font-semibold text-gray-400">Esperando informe</span>
+                                                ) : null}
                                             </td>
                                         </tr>
                                     ))}
