@@ -1,41 +1,15 @@
-import { useEffect, useState } from "react"
 import { ShoppingCart, Heart } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import api from "../../api/axios"
 import { useCart } from "../../context/CartContext"
 import { useAuth } from "../../context/AuthContext"
+import { useProducts } from "../../context/ProductContext"
 
 const FeaturedProducts = () => {
-    const [products, setProducts] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [favoriteIds, setFavoriteIds] = useState([])
     const { addToCart } = useCart()
     const { user } = useAuth()
+    const { products, productsLoading, favoriteIds, toggleFavorite } = useProducts()
     const navigate = useNavigate()
-
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const res = await api.get("/products")
-                setProducts(res.data.slice(0, 8))
-            } catch (err) {
-                console.error(err)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchProducts()
-    }, [])
-
-    useEffect(() => {
-        if (!user) {
-            setFavoriteIds([])
-            return
-        }
-        api.get("/products/favorites/my")
-            .then((res) => setFavoriteIds(res.data.map((product) => product.id)))
-            .catch(() => setFavoriteIds([]))
-    }, [user])
+    const featuredProducts = products.slice(0, 8)
 
     const handleAddToCart = async (productId) => {
         if (!user) { navigate("/login"); return }
@@ -45,23 +19,19 @@ const FeaturedProducts = () => {
     const handleToggleFavorite = async (productId) => {
         if (!user) { navigate("/login"); return }
         try {
-            const res = await api.post(`/products/${productId}/favorite`)
-            setFavoriteIds((prev) => res.data.is_favorite
-                ? [...new Set([...prev, productId])]
-                : prev.filter((id) => id !== productId)
-            )
+            await toggleFavorite(productId)
         } catch (err) {
             console.error(err.response?.data?.message || "No se pudo actualizar favorito")
         }
     }
 
-    if (loading) return (
+    if (productsLoading) return (
         <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-orange-700 border-t-transparent rounded-full animate-spin" />
         </div>
     )
 
-    if (products.length === 0) return null
+    if (featuredProducts.length === 0) return null
 
     return (
         <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-10">
@@ -76,7 +46,7 @@ const FeaturedProducts = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                {products.map((p) => (
+                {featuredProducts.map((p) => (
                     <div
                         key={p.id}
                         onClick={() => navigate(`/productos/${p.id}`)}

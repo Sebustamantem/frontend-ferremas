@@ -3,6 +3,11 @@ import { Link } from "react-router-dom"
 import { Mail } from "lucide-react"
 import { forgotPassword } from "../../api/authService"
 
+const formatApiError = (err, fallback) => {
+    const data = err.response?.data || {}
+    return data.code ? `${data.message || data.error || fallback} (${data.code})` : data.error || data.message || fallback
+}
+
 const ForgotPassword = () => {
     const [email, setEmail] = useState("")
     const [message, setMessage] = useState("")
@@ -19,7 +24,7 @@ const ForgotPassword = () => {
             const res = await forgotPassword({ email })
             setMessage(res.data.message || "Revisa tu correo para continuar")
         } catch (err) {
-            setError(err.response?.data?.error || err.response?.data?.message || "No se pudo solicitar la recuperación")
+            setError(formatApiError(err, "No se pudo solicitar la recuperación"))
         } finally {
             setLoading(false)
         }

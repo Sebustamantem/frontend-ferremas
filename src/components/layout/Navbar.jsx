@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
 import { useCart } from "../../context/CartContext"
+import { useProducts } from "../../context/ProductContext"
 import CategoryBar from "./CategoryBar"
 import CartDrawer from "../cart/CartDrawer"
 import api from "../../api/axios"
@@ -13,13 +14,13 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [indicators, setIndicators] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
-  const [products, setProducts] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [notifications, setNotifications] = useState({ total: 0, items: [], counts: {} })
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isClearingNotifications, setIsClearingNotifications] = useState(false)
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
+  const { products } = useProducts()
   const navigate = useNavigate()
   const menuRef = useRef(null)
   const notificationsRef = useRef(null)
@@ -53,13 +54,6 @@ const Navbar = () => {
     }
     fetchIndicators()
   }, [])
-
-  useEffect(() => {
-    if (isStaff) return
-    api.get("/products")
-      .then((res) => setProducts(res.data || []))
-      .catch(() => setProducts([]))
-  }, [isStaff])
 
   useEffect(() => {
     if (user?.role !== "admin") return
@@ -224,15 +218,15 @@ const Navbar = () => {
             </span>
           </div>
           <span className="hidden sm:block text-gray-300 text-xs">
-            Valores en CLP — fuente: mindicador.cl
+            Valores en CLP - fuente: mindicador.cl
           </span>
         </div>
       </div>
 
       {/* Barra de anuncio */}
       <div className="bg-transparent text-white text-[11px] sm:text-xs text-center py-1.5 sm:py-2 px-3 sm:px-4">
-        🚚 Despacho gratis en compras sobre $50.000 —{" "}
-        <span className="font-bold text-white">¡Aprovecha ahora!</span>
+        Despacho gratis en compras sobre $50.000 -{" "}
+        <span className="font-bold text-white">Aprovecha ahora</span>
       </div>
         </>
       )}
@@ -249,7 +243,7 @@ const Navbar = () => {
                   <input
                     type="text"
                     autoFocus
-                    placeholder="Buscar Producto..."
+                    placeholder="Buscar producto..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onFocus={() => setShowSuggestions(true)}
@@ -281,7 +275,7 @@ const Navbar = () => {
             <form onSubmit={handleSearch} className={`${isStaff ? "hidden" : "hidden sm:flex"} relative flex-1 max-w-2xl mx-6 bg-white rounded-full h-11 shadow-sm`}>
               <input
                 type="text"
-                placeholder="Buscar Productos..."
+                placeholder="Buscar productos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
@@ -418,27 +412,25 @@ const Navbar = () => {
                           )}
                         </div>
 
-                        {/* Link Admin */}
                         {user.role === "admin" && (
                           <Link to="/admin/dashboard" onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center px-5 py-3 text-sm font-semibold text-orange-700 hover:bg-orange-50 transition border-b border-gray-100">
+                            className="flex items-center px-5 py-3 text-sm font-semibold text-orange-700 hover:bg-orange-50 transition">
                             Panel admin
                           </Link>
                         )}
 
-                        {/* Links Admin */}
-                        {false && user.role === "admin" && (
+                        {user.role === "admin" && (
                           <>
                             <Link to="/admin/products" onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center px-5 py-3 text-sm font-semibold text-orange-700 hover:bg-orange-50 transition">
+                              className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-700 transition">
                               Productos
                             </Link>
                             <Link to="/admin/users" onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center px-5 py-3 text-sm font-semibold text-orange-700 hover:bg-orange-50 transition">
+                              className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-700 transition">
                               Usuarios
                             </Link>
                             <Link to="/admin/credits" onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center px-5 py-3 text-sm font-semibold text-orange-700 hover:bg-orange-50 transition border-b border-gray-100">
+                              className="flex items-center px-5 py-3 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-700 transition border-b border-gray-100">
                               FerreCredito
                             </Link>
                           </>
@@ -473,7 +465,7 @@ const Navbar = () => {
                           {user.role === "vendedor" && (
                             <Link to="/vendedor" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition border-b border-gray-100">
-                              Panel Vendedor
+                              Panel vendedor
                             </Link>
                           )}
 
@@ -481,14 +473,14 @@ const Navbar = () => {
                           {user.role === "bodeguero" && (
                             <Link to="/bodeguero" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-green-600 hover:bg-green-50 transition border-b border-gray-100">
-                              Panel Bodeguero
+                              Panel bodeguero
                             </Link>
                           )}
 
                           {user.role === "contador" && (
                             <Link to="/contador" onClick={() => setIsUserMenuOpen(false)}
                               className="flex items-center px-5 py-3 text-sm font-semibold text-yellow-700 hover:bg-yellow-50 transition border-b border-gray-100">
-                              Panel Contador
+                              Panel contador
                             </Link>
                           )}
 

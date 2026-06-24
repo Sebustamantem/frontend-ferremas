@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom"
-import { CreditCard, X, Check } from "lucide-react"
+import { CreditCard, ReceiptText, X, Check } from "lucide-react"
 import api from "../../api/axios"
 import { downloadCsv } from "../../utils/csv"
 import ExportMenu from "../../components/ui/ExportMenu"
@@ -213,12 +213,15 @@ const AdminCredits = () => {
                                     ? "bg-orange-500 text-white"
                                     : "bg-white text-gray-600 border border-gray-200 hover:border-orange-400"
                                 }`}>
-                            {tab === "credits" ? "💳 Créditos" : "📋 Cuotas"}
+                            <span className="inline-flex items-center gap-2">
+                                {tab === "credits" ? <CreditCard size={15} /> : <ReceiptText size={15} />}
+                                {tab === "credits" ? "Créditos" : "Cuotas"}
+                            </span>
                         </button>
                     ))}
                     <ExportMenu
                         items={[
-                            { label: "Creditos", description: "Cupos, usado y disponible", onClick: exportCredits },
+                            { label: "Créditos", description: "Cupos, usado y disponible", onClick: exportCredits },
                             { label: "Cuotas", description: "Vencimientos y estados", onClick: exportInstallments },
                         ]}
                     />
@@ -234,10 +237,12 @@ const AdminCredits = () => {
                         ) : users.length === 0 ? (
                             <div className="text-center py-20 text-gray-400">
                                 <CreditCard size={48} className="mx-auto mb-4 opacity-20" />
-                                <p>No hay maestros ni PYMEs registrados aún</p>
+                                <p className="font-semibold text-gray-500">No hay maestros ni PYMEs registrados aún</p>
+                                <p className="text-sm text-gray-400 mt-1">Cuando alguien postule, aparecerá en esta lista.</p>
                             </div>
                         ) : (
-                            <table className="w-full text-sm">
+                            <div className="overflow-x-auto">
+                            <table className="w-full min-w-[900px] text-sm">
                                 <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
                                     <tr>
                                         <th className="px-6 py-4 text-left">Usuario</th>
@@ -277,13 +282,13 @@ const AdminCredits = () => {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 font-medium text-gray-800">
-                                                    {credit ? `$${Number(credit.credit_limit).toLocaleString("es-CL")}` : "—"}
+                                                    {credit ? `$${Number(credit.credit_limit).toLocaleString("es-CL")}` : "-"}
                                                 </td>
                                                 <td className="px-6 py-4 text-red-500 font-medium">
-                                                    {credit ? `$${Number(credit.balance_used).toLocaleString("es-CL")}` : "—"}
+                                                    {credit ? `$${Number(credit.balance_used).toLocaleString("es-CL")}` : "-"}
                                                 </td>
                                                 <td className="px-6 py-4 text-green-600 font-medium">
-                                                    {credit ? `$${available.toLocaleString("es-CL")}` : "—"}
+                                                    {credit ? `$${available.toLocaleString("es-CL")}` : "-"}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {isPendingApplication(u.user_type) ? (
@@ -295,7 +300,7 @@ const AdminCredits = () => {
                                                                 ? "bg-green-100 text-green-600"
                                                                 : "bg-red-100 text-red-500"
                                                             }`}>
-                                                            {credit.is_active ? "✅ Activo" : "❌ Inactivo"}
+                                                            {credit.is_active ? "Activo" : "Inactivo"}
                                                         </span>
                                                     ) : (
                                                         <span className="text-xs text-gray-400">Sin crédito</span>
@@ -325,6 +330,7 @@ const AdminCredits = () => {
                                     })}
                                 </tbody>
                             </table>
+                            </div>
                         )}
                     </div>
                 )}
@@ -334,10 +340,13 @@ const AdminCredits = () => {
                     <div className="bg-white rounded-2xl shadow overflow-hidden">
                         {installments.length === 0 ? (
                             <div className="text-center py-20 text-gray-400">
-                                <p>No hay cuotas registradas aún</p>
+                                <ReceiptText size={44} className="mx-auto mb-3 opacity-20" />
+                                <p className="font-semibold text-gray-500">No hay cuotas registradas aún</p>
+                                <p className="text-sm text-gray-400 mt-1">Las compras con FerreCredito aparecerán aquí.</p>
                             </div>
                         ) : (
-                            <table className="w-full text-sm">
+                            <div className="overflow-x-auto">
+                            <table className="w-full min-w-[980px] text-sm">
                                 <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
                                     <tr>
                                         <th className="px-6 py-4 text-left">Usuario</th>
@@ -395,6 +404,7 @@ const AdminCredits = () => {
                                     ))}
                                 </tbody>
                             </table>
+                            </div>
                         )}
                     </div>
                 )}

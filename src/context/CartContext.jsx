@@ -3,6 +3,13 @@ import { useAuth } from "./AuthContext"
 import api from "../api/axios"
 
 const CartContext = createContext()
+const CART_CACHE_TTL = 60 * 1000
+let cartCache = {
+    userId: null,
+    data: [],
+    fetchedAt: 0,
+    promise: null,
+}
 
 export const CartProvider = ({ children }) => {
     const [cart, setCart] = useState([])
@@ -14,12 +21,41 @@ export const CartProvider = ({ children }) => {
         else setCart([])
     }, [user])
 
-    const fetchCart = async () => {
+    const fetchCart = async ({ force = false } = {}) => {
+        if (!user?.id) {
+            setCart([])
+            return []
+        }
+
+        const isSameUser = cartCache.userId === user.id
+        const isFresh = isSameUser && Date.now() - cartCache.fetchedAt < CART_CACHE_TTL
+        if (!force && isFresh) {
+            setCart(cartCache.data)
+            return cartCache.data
+        }
+
         try {
-            const res = await api.get("/cart")
-            setCart(res.data)
+            if (!cartCache.promise || !isSameUser) {
+                cartCache.promise = api.get("/cart")
+                    .then((res) => {
+                        cartCache = {
+                            userId: user.id,
+                            data: res.data || [],
+                            fetchedAt: Date.now(),
+                            promise: null,
+                        }
+                        return cartCache.data
+                    })
+                    .finally(() => {
+                        cartCache.promise = null
+                    })
+            }
+            const data = await cartCache.promise
+            setCart(data)
+            return data
         } catch (err) {
             console.error(err)
+            return []
         }
     }
 
@@ -28,7 +64,7 @@ export const CartProvider = ({ children }) => {
         try {
             setLoading(true)
             await api.post("/cart", { product_id, quantity })
-            await fetchCart()
+            await fetchCart({ force: true })
             return true
         } catch (err) {
             console.error(err)
@@ -43,7 +79,7 @@ export const CartProvider = ({ children }) => {
         try {
             setLoading(true)
             await api.post(`/services/${serviceId}/cart`)
-            await fetchCart()
+            await fetchCart({ force: true })
             return true
         } catch (err) {
             console.error(err)
@@ -57,7 +93,7 @@ export const CartProvider = ({ children }) => {
         try {
             if (quantity < 1) return
             await api.put(`/cart/${productId}`, { quantity })
-            await fetchCart()
+            await fetchCart({ force: true })
         } catch (err) {
             console.error(err)
         }
@@ -66,7 +102,7 @@ export const CartProvider = ({ children }) => {
     const removeFromCart = async (productId) => {
         try {
             await api.delete(`/cart/${productId}`)
-            await fetchCart()
+            await fetchCart({ force: true })
         } catch (err) {
             console.error(err)
         }
@@ -75,7 +111,7 @@ export const CartProvider = ({ children }) => {
     const removeServiceFromCart = async (serviceId) => {
         try {
             await api.delete(`/services/${serviceId}/cart`)
-            await fetchCart()
+            await fetchCart({ force: true })
         } catch (err) {
             console.error(err)
         }
@@ -84,6 +120,7 @@ export const CartProvider = ({ children }) => {
     const clearCart = async () => {
         try {
             await api.delete("/cart/clear")
+            cartCache = { userId: user?.id || null, data: [], fetchedAt: Date.now(), promise: null }
             setCart([])
         } catch (err) {
             console.error(err)

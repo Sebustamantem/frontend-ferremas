@@ -3,6 +3,11 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { Eye, EyeOff, Lock } from "lucide-react"
 import { resetPassword } from "../../api/authService"
 
+const formatApiError = (err, fallback) => {
+    const data = err.response?.data || {}
+    return data.code ? `${data.message || fallback} (${data.code})` : data.message || fallback
+}
+
 const ResetPassword = () => {
     const { token } = useParams()
     const navigate = useNavigate()
@@ -33,7 +38,7 @@ const ResetPassword = () => {
             setMessage(res.data.message || "Contraseña actualizada correctamente")
             setTimeout(() => navigate("/login"), 1200)
         } catch (err) {
-            setError(err.response?.data?.message || "No se pudo cambiar la contraseña")
+            setError(formatApiError(err, "No se pudo cambiar la contraseña"))
         } finally {
             setLoading(false)
         }

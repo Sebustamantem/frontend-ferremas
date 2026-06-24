@@ -18,6 +18,7 @@ import {
 import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
 import { useCart } from "../../context/CartContext"
+import { useProducts } from "../../context/ProductContext"
 
 const emptyReviewData = {
     total: 0,
@@ -44,6 +45,7 @@ const ProductDetail = () => {
     const navigate = useNavigate()
     const { user } = useAuth()
     const { addToCart } = useCart()
+    const { products, favoriteIds, toggleFavorite } = useProducts()
     const [product, setProduct] = useState(null)
     const [loading, setLoading] = useState(true)
     const [quantity, setQuantity] = useState(1)
@@ -56,6 +58,11 @@ const ProductDetail = () => {
         window.scrollTo({ top: 0, left: 0, behavior: "instant" })
         const fetchProduct = async () => {
             try {
+                const cachedProduct = products.find((item) => Number(item.id) === Number(id))
+                if (cachedProduct) {
+                    setProduct(cachedProduct)
+                    return
+                }
                 const res = await api.get(`/products/${id}`)
                 setProduct(res.data)
             } catch (err) {
@@ -65,7 +72,7 @@ const ProductDetail = () => {
             }
         }
         fetchProduct()
-    }, [id])
+    }, [id, products])
 
     useEffect(() => {
         api.get(`/products/${id}/reviews`)
@@ -74,11 +81,8 @@ const ProductDetail = () => {
     }, [id])
 
     useEffect(() => {
-        if (!user) return
-        api.get("/products/favorites/my")
-            .then((res) => setIsFavorite(res.data.some((item) => Number(item.id) === Number(id))))
-            .catch(() => setIsFavorite(false))
-    }, [id, user])
+        setIsFavorite(favoriteIds.some((itemId) => Number(itemId) === Number(id)))
+    }, [favoriteIds, id])
 
     const gallery = useMemo(() => {
         if (!product?.image_url) return []
@@ -105,8 +109,8 @@ const ProductDetail = () => {
             return
         }
         try {
-            const res = await api.post(`/products/${product.id}/favorite`)
-            setIsFavorite(res.data.is_favorite)
+            const res = await toggleFavorite(product.id)
+            setIsFavorite(res.is_favorite)
         } catch (err) {
             setMessage(err.response?.data?.message || "No se pudo actualizar favoritos")
         }

@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react"
-import { ShoppingCart, Heart, Search, SlidersHorizontal } from "lucide-react"
-import api from "../../api/axios"
+import { useEffect, useMemo, useState } from "react"
+import { PackageSearch, ShoppingCart, Heart, Search, SlidersHorizontal } from "lucide-react"
 import { useCart } from "../../context/CartContext"
 import { useAuth } from "../../context/AuthContext"
+import { useProducts } from "../../context/ProductContext"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 const categories = ["Todas", "Herramientas", "Construcción", "Electricidad", "Plomería", "Pintura", "Jardín", "Fijaciones", "Otros"]
+const PAGE_SIZE = 20
 
 const normalizeCategory = (value = "") =>
     value
@@ -21,15 +22,13 @@ const getCategoryFromParam = (param) => {
 }
 
 const Products = () => {
-    const [products, setProducts] = useState([])
-    const [filtered, setFiltered] = useState([])
-    const [loading, setLoading] = useState(true)
     const [activeCategory, setActiveCategory] = useState("Todas")
     const [search, setSearch] = useState("")
     const [sortBy, setSortBy] = useState("newest")
-    const [favoriteIds, setFavoriteIds] = useState([])
+    const [currentPage, setCurrentPage] = useState(1)
     const { addToCart } = useCart()
     const { user } = useAuth()
+    const { products, productsLoading, favoriteIds, toggleFavorite } = useProducts()
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
 
@@ -38,32 +37,7 @@ const Products = () => {
         setSearch(searchParams.get("buscar") || "")
     }, [searchParams])
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const res = await api.get("/products")
-                setProducts(res.data)
-                setFiltered(res.data)
-            } catch (err) {
-                console.error(err)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchProducts()
-    }, [])
-
-    useEffect(() => {
-        if (!user) {
-            setFavoriteIds([])
-            return
-        }
-        api.get("/products/favorites/my")
-            .then((res) => setFavoriteIds(res.data.map((product) => product.id)))
-            .catch(() => setFavoriteIds([]))
-    }, [user])
-
-    useEffect(() => {
+    const filtered = useMemo(() => {
         let result = [...products]
         if (activeCategory !== "Todas") {
             result = result.filter((p) => normalizeCategory(p.category) === normalizeCategory(activeCategory))
@@ -79,8 +53,19 @@ const Products = () => {
         if (sortBy === "price_asc") result.sort((a, b) => a.price - b.price)
         if (sortBy === "price_desc") result.sort((a, b) => b.price - a.price)
         if (sortBy === "newest") result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        setFiltered(result)
+        return result
     }, [activeCategory, search, sortBy, products])
+
+    const totalPages = Math.max(Math.ceil(filtered.length / PAGE_SIZE), 1)
+    const paginatedProducts = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [activeCategory, search, sortBy])
+
+    useEffect(() => {
+        if (currentPage > totalPages) setCurrentPage(totalPages)
+    }, [currentPage, totalPages])
 
     const handleAddToCart = async (productId) => {
         if (!user) { navigate("/login"); return }
@@ -90,11 +75,7 @@ const Products = () => {
     const handleToggleFavorite = async (productId) => {
         if (!user) { navigate("/login"); return }
         try {
-            const res = await api.post(`/products/${productId}/favorite`)
-            setFavoriteIds((prev) => res.data.is_favorite
-                ? [...new Set([...prev, productId])]
-                : prev.filter((id) => id !== productId)
-            )
+            await toggleFavorite(productId)
         } catch (err) {
             console.error(err.response?.data?.message || "No se pudo actualizar favorito")
         }
@@ -158,18 +139,33 @@ const Products = () => {
                     ))}
                 </div>
 
-                {loading ? (
+                {productsLoading ? (
                     <div className="flex justify-center py-20">
                         <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="text-center py-20 text-gray-400">
-                        <p className="text-lg font-medium">No se encontraron productos</p>
-                        <p className="text-sm mt-1">Intenta con otra categoría o búsqueda</p>
+                    <div className="mx-auto max-w-md rounded-2xl border border-amber-100 bg-white/95 px-6 py-12 text-center shadow-sm">
+                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-teal-700">
+                            <PackageSearch size={28} />
+                        </div>
+                        <p className="text-lg font-bold text-gray-800">No encontramos productos</p>
+                        <p className="text-sm text-gray-500 mt-1">Prueba con otra categoría o una búsqueda más amplia.</p>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearch("")
+                                setActiveCategory("Todas")
+                                setSearchParams({})
+                            }}
+                            className="mt-5 inline-flex items-center justify-center rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 transition"
+                        >
+                            Limpiar filtros
+                        </button>
                     </div>
                 ) : (
+                    <>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                        {filtered.map((p) => (
+                        {paginatedProducts.map((p) => (
                             <div
                                 key={p.id}
                                 onClick={() => navigate(`/productos/${p.id}`)}
@@ -225,6 +221,35 @@ const Products = () => {
                             </div>
                         ))}
                     </div>
+                    {totalPages > 1 && (
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-white/95 px-4 py-3">
+                            <p className="text-sm text-gray-500">
+                                Mostrando {paginatedProducts.length} de {filtered.length} productos
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+                                >
+                                    Anterior
+                                </button>
+                                <span className="text-sm font-semibold text-gray-700">
+                                    {currentPage} / {totalPages}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+                                >
+                                    Siguiente
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    </>
                 )}
             </div>
         </div>

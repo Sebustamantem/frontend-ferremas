@@ -1,40 +1,29 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { Heart, ShoppingCart, Trash2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
 import { useCart } from "../../context/CartContext"
+import { useProducts } from "../../context/ProductContext"
 
 const Favorites = () => {
     const { user } = useAuth()
     const { addToCart } = useCart()
+    const { products, productsLoading, favoriteIds, toggleFavorite } = useProducts()
     const navigate = useNavigate()
-    const [favorites, setFavorites] = useState([])
-    const [loading, setLoading] = useState(true)
+    const favorites = useMemo(
+        () => products.filter((product) => favoriteIds.includes(product.id)),
+        [products, favoriteIds]
+    )
 
     useEffect(() => {
         if (!user) {
             navigate("/login")
             return
         }
-        fetchFavorites()
     }, [user, navigate])
 
-    const fetchFavorites = async () => {
-        setLoading(true)
-        try {
-            const res = await api.get("/products/favorites/my")
-            setFavorites(res.data)
-        } catch (err) {
-            console.error(err)
-        } finally {
-            setLoading(false)
-        }
-    }
-
     const handleRemove = async (productId) => {
-        await api.post(`/products/${productId}/favorite`)
-        setFavorites((prev) => prev.filter((product) => product.id !== productId))
+        await toggleFavorite(productId)
     }
 
     const handleAddToCart = async (productId) => {
@@ -49,7 +38,7 @@ const Favorites = () => {
                     <p className="text-gray-500 text-sm mt-1">Productos guardados para comprar despues.</p>
                 </div>
 
-                {loading ? (
+                {productsLoading ? (
                     <div className="flex justify-center py-20">
                         <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
                     </div>
