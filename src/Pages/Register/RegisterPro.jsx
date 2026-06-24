@@ -5,6 +5,7 @@ import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
 import { Eye, EyeOff, User, Mail, Lock, Phone, CreditCard, Briefcase, Building } from "lucide-react"
 import { formatRut, isRutLengthValid } from "../../utils/rut"
+import { validateStrongPassword } from "../../utils/passwordValidation"
 
 const RegisterPro = () => {
     const [searchParams] = useSearchParams()
@@ -53,14 +54,6 @@ const RegisterPro = () => {
         setForm({ ...form, phone: value })
     }
 
-    const validatePassword = (password) => {
-        if (password.length < 8) return "La contraseña debe tener al menos 8 caracteres"
-        if (!/[A-Z]/.test(password)) return "Debe tener al menos una mayúscula"
-        if (!/[a-z]/.test(password)) return "Debe tener al menos una minúscula"
-        if (!/[0-9]/.test(password)) return "Debe tener al menos un número"
-        return null
-    }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
         setLoading(true)
@@ -84,7 +77,7 @@ const RegisterPro = () => {
             return
         }
 
-        const passwordError = form.password ? validatePassword(form.password) : null
+        const passwordError = form.password ? validateStrongPassword(form.password) : null
         if (passwordError) {
             setError(passwordError)
             setLoading(false)
@@ -269,7 +262,7 @@ const RegisterPro = () => {
                                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-400 px-1">Mín. 8 caracteres, una mayúscula, una minúscula y un número</p>
+                            <p className="text-xs text-gray-400 px-1">Mín. 12 caracteres, mayúscula, minúscula, número, símbolo permitido y sin secuencias.</p>
                         </div>
 
                         <button type="submit" disabled={loading}

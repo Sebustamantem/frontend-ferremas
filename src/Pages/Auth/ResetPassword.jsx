@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { Eye, EyeOff, Lock } from "lucide-react"
 import { resetPassword } from "../../api/authService"
+import { passwordRequirements, validateStrongPassword } from "../../utils/passwordValidation"
 
 const formatApiError = (err, fallback) => {
     const data = err.response?.data || {}
@@ -22,8 +23,9 @@ const ResetPassword = () => {
         setError("")
         setMessage("")
 
-        if (form.password.length < 8) {
-            setError("La contraseña debe tener al menos 8 caracteres")
+        const passwordError = validateStrongPassword(form.password)
+        if (passwordError) {
+            setError(passwordError)
             return
         }
 
@@ -91,6 +93,13 @@ const ResetPassword = () => {
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-1 mt-2">
+                                {passwordRequirements.map((req) => (
+                                    <p key={req} className="text-xs text-gray-400 flex items-center gap-1">
+                                        <span className="text-teal-600">•</span> {req}
+                                    </p>
+                                ))}
                             </div>
                         </div>
 

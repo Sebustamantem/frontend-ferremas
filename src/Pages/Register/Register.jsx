@@ -4,6 +4,7 @@ import { register as registerService } from "../../api/authService"
 import { useAuth } from "../../context/AuthContext"
 import { Eye, EyeOff, User, Mail, Lock, Phone, CreditCard } from "lucide-react"
 import { formatRut, isRutLengthValid } from "../../utils/rut"
+import { passwordRequirements, validateStrongPassword } from "../../utils/passwordValidation"
 
 const Register = () => {
     const [form, setForm] = useState({
@@ -27,15 +28,6 @@ const Register = () => {
         setForm({ ...form, phone: value })
     }
 
-    const validatePassword = (password) => {
-        if (password.length < 8) return "La contraseña debe tener al menos 8 caracteres"
-        if (!/[A-Z]/.test(password)) return "Debe tener al menos una mayúscula"
-        if (!/[a-z]/.test(password)) return "Debe tener al menos una minúscula"
-        if (!/[0-9]/.test(password)) return "Debe tener al menos un número"
-        if (/[\s¡¿`~çñÑ]/.test(password)) return "No usar espacios ni caracteres especiales (¡¿`~çñÑ)"
-        return null
-    }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
         setLoading(true)
@@ -47,7 +39,7 @@ const Register = () => {
         if (!isRutLengthValid(form.rut))
             return setError("Ingresa un RUT valido"), setLoading(false)
 
-        const passwordError = validatePassword(form.password)
+        const passwordError = validateStrongPassword(form.password)
         if (passwordError) {
             setError(passwordError)
             setLoading(false)
@@ -172,10 +164,7 @@ const Register = () => {
                                 </button>
                             </div>
                             <div className="grid grid-cols-3 gap-1 mt-1">
-                                {[
-                                    "Mín. 8 caracteres", "1 número", "1 mayúscula",
-                                    "1 minúscula", "Sin espacio", "Sin usar \\¡¿`~çñÑ"
-                                ].map((req) => (
+                                {passwordRequirements.map((req) => (
                                     <p key={req} className="text-xs text-gray-400 flex items-center gap-1">
                                         <span className="text-teal-600">•</span> {req}
                                     </p>

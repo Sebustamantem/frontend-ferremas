@@ -85,8 +85,9 @@ const ProductDetail = () => {
     }, [favoriteIds, id])
 
     const gallery = useMemo(() => {
-        if (!product?.image_url) return []
-        return [product.image_url, product.image_url, product.image_url, product.image_url]
+        const urls = Array.isArray(product?.image_urls) ? product.image_urls.filter(Boolean) : []
+        if (product?.image_url && !urls.includes(product.image_url)) urls.unshift(product.image_url)
+        return [...new Set(urls)]
     }, [product])
 
     const stock = Number(product?.stock || 0)

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { LockKeyhole } from "lucide-react"
 import api from "../../api/axios"
 import { useAuth } from "../../context/AuthContext"
+import { passwordRequirements, validateStrongPassword } from "../../utils/passwordValidation"
 
 const getRoleHomePath = (role) => {
     if (role === "admin") return "/admin/products"
@@ -19,19 +20,11 @@ const ChangeInitialPassword = () => {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
 
-    const validatePassword = (password) => {
-        if (password.length < 8) return "La contraseña debe tener al menos 8 caracteres"
-        if (!/[A-Z]/.test(password)) return "Debe tener al menos una mayúscula"
-        if (!/[a-z]/.test(password)) return "Debe tener al menos una minúscula"
-        if (!/[0-9]/.test(password)) return "Debe tener al menos un número"
-        return null
-    }
-
     const handleSubmit = async (event) => {
         event.preventDefault()
         setError("")
 
-        const passwordError = validatePassword(form.password)
+        const passwordError = validateStrongPassword(form.password)
         if (passwordError) {
             setError(passwordError)
             return
@@ -81,6 +74,13 @@ const ChangeInitialPassword = () => {
                             className="mt-2 w-full rounded-xl border border-teal-100 bg-white/80 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
                             required
                         />
+                        <div className="grid grid-cols-2 gap-1 mt-2">
+                            {passwordRequirements.map((req) => (
+                                <p key={req} className="text-xs text-gray-400 flex items-center gap-1">
+                                    <span className="text-teal-600">•</span> {req}
+                                </p>
+                            ))}
+                        </div>
                     </label>
                     <label className="block">
                         <span className="text-sm text-gray-600">Confirmar contraseña</span>

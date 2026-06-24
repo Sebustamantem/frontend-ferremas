@@ -41,8 +41,9 @@ const AdminProducts = () => {
     const [products, setProducts] = useState([])
     const [showModal, setShowModal] = useState(false)
     const [form, setForm] = useState(emptyForm)
-    const [imageFile, setImageFile] = useState(null)
-    const [imagePreview, setImagePreview] = useState(null)
+    const [imageFiles, setImageFiles] = useState([])
+    const [imagePreviews, setImagePreviews] = useState([])
+    const [existingImageUrls, setExistingImageUrls] = useState([])
     const [editingId, setEditingId] = useState(null)
     const [loading, setLoading] = useState(false)
     const [fetching, setFetching] = useState(true)
@@ -136,11 +137,9 @@ const AdminProducts = () => {
     const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value })
 
     const handleImageChange = (event) => {
-        const file = event.target.files[0]
-        if (file) {
-            setImageFile(file)
-            setImagePreview(URL.createObjectURL(file))
-        }
+        const files = Array.from(event.target.files || []).slice(0, Math.max(6 - existingImageUrls.length, 0))
+        setImageFiles(files)
+        setImagePreviews([...existingImageUrls, ...files.map((file) => URL.createObjectURL(file))])
     }
 
     const handleSubmit = async (event) => {
@@ -154,7 +153,8 @@ const AdminProducts = () => {
             formData.append("price", form.price)
             formData.append("stock", form.stock)
             formData.append("category", form.category)
-            if (imageFile) formData.append("image", imageFile)
+            formData.append("existing_image_urls", JSON.stringify(existingImageUrls))
+            imageFiles.forEach((file) => formData.append("images", file))
 
             if (editingId) {
                 await api.put(`/products/${editingId}`, formData, {
@@ -183,8 +183,12 @@ const AdminProducts = () => {
             stock: product.stock,
             category: product.category || ""
         })
-        setImagePreview(product.image_url || null)
-        setImageFile(null)
+        const productImages = Array.isArray(product.image_urls) && product.image_urls.length
+            ? product.image_urls
+            : product.image_url ? [product.image_url] : []
+        setImagePreviews(productImages)
+        setExistingImageUrls(productImages)
+        setImageFiles([])
         setEditingId(product.id)
         setShowModal(true)
     }
@@ -244,8 +248,9 @@ const AdminProducts = () => {
     const handleCloseModal = () => {
         setShowModal(false)
         setForm(emptyForm)
-        setImageFile(null)
-        setImagePreview(null)
+        setImageFiles([])
+        setImagePreviews([])
+        setExistingImageUrls([])
         setEditingId(null)
         setError("")
     }
@@ -671,20 +676,31 @@ const AdminProducts = () => {
                             </select>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-sm font-medium text-gray-700">Imagen del producto</label>
+                                <label className="text-sm font-medium text-gray-700">Imágenes del producto</label>
                                 <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition">
                                     <Upload size={24} className="text-gray-400 mb-2" />
-                                    <span className="text-sm text-gray-500">Haz clic para subir una imagen</span>
-                                    <span className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP</span>
-                                    <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                                    <span className="text-sm text-gray-500">Haz clic para subir hasta 6 imágenes</span>
+                                    <span className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP. La primera será la portada.</span>
+                                    <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
                                 </label>
 
-                                {imagePreview && (
-                                    <img
-                                        src={imagePreview}
-                                        alt="preview"
-                                        className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-gray-50"
-                                    />
+                                {imagePreviews.length > 0 && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {imagePreviews.map((preview, index) => (
+                                            <div key={`${preview}-${index}`} className="relative">
+                                                <img
+                                                    src={preview}
+                                                    alt={`preview ${index + 1}`}
+                                                    className="w-full h-28 object-contain rounded-lg border border-gray-200 bg-gray-50"
+                                                />
+                                                {index === 0 && (
+                                                    <span className="absolute left-2 top-2 rounded bg-orange-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                                                        Portada
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
 

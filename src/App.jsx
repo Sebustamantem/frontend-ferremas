@@ -110,9 +110,9 @@ function AppContent() {
           <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/credits" element={<AdminRoute><AdminCredits /></AdminRoute>} />
-          <Route path="/vendedor" element={<RoleRoute roles={["admin", "vendedor"]}><VendedorPanel /></RoleRoute>} />
-          <Route path="/bodeguero" element={<RoleRoute roles={["admin", "bodeguero"]}><BodegueroPanel /></RoleRoute>} />
-          <Route path="/contador" element={<RoleRoute roles={["admin", "contador"]}><ContadorPanel /></RoleRoute>} />
+          <Route path="/vendedor" element={<RoleRoute roles={["vendedor"]}><VendedorPanel /></RoleRoute>} />
+          <Route path="/bodeguero" element={<RoleRoute roles={["bodeguero"]}><BodegueroPanel /></RoleRoute>} />
+          <Route path="/contador" element={<RoleRoute roles={["contador"]}><ContadorPanel /></RoleRoute>} />
         </Routes>
         </Suspense>
       </main>

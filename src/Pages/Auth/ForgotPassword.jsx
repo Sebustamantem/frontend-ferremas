@@ -12,18 +12,23 @@ const ForgotPassword = () => {
     const [email, setEmail] = useState("")
     const [message, setMessage] = useState("")
     const [error, setError] = useState("")
+    const [notRegistered, setNotRegistered] = useState(false)
     const [loading, setLoading] = useState(false)
 
     const handleSubmit = async (event) => {
         event.preventDefault()
         setMessage("")
         setError("")
+        setNotRegistered(false)
         setLoading(true)
 
         try {
             const res = await forgotPassword({ email })
             setMessage(res.data.message || "Revisa tu correo para continuar")
         } catch (err) {
+            if (err.response?.data?.code === "USER_NOT_REGISTERED") {
+                setNotRegistered(true)
+            }
             setError(formatApiError(err, "No se pudo solicitar la recuperación"))
         } finally {
             setLoading(false)
@@ -52,6 +57,11 @@ const ForgotPassword = () => {
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-600 text-sm text-center py-2 px-4 rounded-xl mb-4">
                             {error}
+                            {notRegistered && (
+                                <Link to="/register" className="block mt-2 font-bold text-red-700 hover:underline">
+                                    Crear cuenta ahora
+                                </Link>
+                            )}
                         </div>
                     )}
 
