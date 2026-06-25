@@ -74,7 +74,7 @@ const MyServices = () => {
                 api.get("/services/my"),
                 api.get("/services/my/requests"),
             ])
-            setServices(servicesRes.data)
+            setServices(servicesRes.data.services || servicesRes.data)
             setRequests(requestsRes.data.requests || [])
             setSummary(requestsRes.data.summary || { total_requests: 0, paid_requests: 0, confirmation_total: 0 })
         } catch (err) {

@@ -59,9 +59,9 @@ const BodegueroPanel = () => {
                 api.get("/staff/inventory/reports/my"),
                 api.get("/staff/warehouse/orders"),
             ])
-            setInventory(inventoryRes.data)
-            setStockReports(reportsRes.data)
-            setOrders(ordersRes.data)
+            setInventory(inventoryRes.data.inventory || inventoryRes.data)
+            setStockReports(reportsRes.data.reports || reportsRes.data)
+            setOrders(ordersRes.data.orders || ordersRes.data)
         } catch (err) {
             setError(err.response?.data?.message || "No se pudo cargar el panel de bodeguero")
         } finally {

@@ -48,7 +48,7 @@ const AdminUsers = () => {
         setLoading(true)
         try {
             const res = await api.get("/users")
-            setUsers(res.data)
+            setUsers(res.data.users || res.data)
         } catch (err) {
             console.error(err)
         } finally {
@@ -63,8 +63,8 @@ const AdminUsers = () => {
     const confirmRoleChange = async () => {
         if (!roleDraft) return
         try {
-            await api.put(`/users/${roleDraft.id}/role`, { role: roleDraft.role })
-            setNotice({ type: "success", message: "Rol actualizado correctamente." })
+            const res = await api.put(`/users/${roleDraft.id}/role`, { role: roleDraft.role })
+            setNotice({ type: "success", message: res.data.message || "Rol actualizado correctamente." })
             setRoleDraft(null)
             fetchUsers()
         } catch (err) {

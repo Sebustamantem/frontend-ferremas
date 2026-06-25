@@ -32,12 +32,14 @@ const ForgotPassword = lazy(() => import("./Pages/Auth/ForgotPassword"))
 const ResetPassword = lazy(() => import("./Pages/Auth/ResetPassword"))
 
 const ProtectedRoute = ({ children }) => {
-  const { user } = useAuth()
+  const { user, authLoading } = useAuth()
+  if (authLoading) return <RouteLoader />
   return user ? children : <Navigate to="/login" />
 }
 
 const AdminRoute = ({ children }) => {
-  const { user } = useAuth()
+  const { user, authLoading } = useAuth()
+  if (authLoading) return <RouteLoader />
   if (!user) return <Navigate to="/login" />
   if (user.must_change_password) return <Navigate to="/cambiar-password" />
   if (user.role !== "admin") return <Navigate to="/" />
@@ -45,7 +47,8 @@ const AdminRoute = ({ children }) => {
 }
 
 const RoleRoute = ({ children, roles }) => {
-  const { user } = useAuth()
+  const { user, authLoading } = useAuth()
+  if (authLoading) return <RouteLoader />
   if (!user) return <Navigate to="/login" />
   if (user.must_change_password) return <Navigate to="/cambiar-password" />
   if (!roles.includes(user.role)) return <Navigate to="/" />
@@ -67,7 +70,8 @@ const HomeRoute = () => {
 }
 
 const CustomerRoute = ({ children, requireAuth = false }) => {
-  const { user } = useAuth()
+  const { user, authLoading } = useAuth()
+  if (authLoading) return <RouteLoader />
   const roleHomePath = getRoleHomePath(user?.role)
   if (roleHomePath) return <Navigate to={roleHomePath} />
   if (requireAuth && !user) return <Navigate to="/login" />

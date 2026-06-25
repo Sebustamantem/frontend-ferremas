@@ -40,14 +40,15 @@ const Profile = () => {
         const fetchProfile = async () => {
             try {
                 const res = await api.get("/users/me")
-                const addressData = res.data.address && typeof res.data.address === "object"
-                    ? res.data.address
-                    : res.data.address ? JSON.parse(res.data.address) : null
+                const profile = res.data.user || res.data
+                const addressData = profile.address && typeof profile.address === "object"
+                    ? profile.address
+                    : profile.address ? JSON.parse(profile.address) : null
                 setForm({
-                    name: res.data.name || "",
-                    lastname: res.data.lastname || "",
-                    email: res.data.email || "",
-                    phone: normalizePhone(res.data.phone || ""),
+                    name: profile.name || "",
+                    lastname: profile.lastname || "",
+                    email: profile.email || "",
+                    phone: normalizePhone(profile.phone || ""),
                     password: "",
                     address: {
                         region: addressData?.region || "",
@@ -85,8 +86,8 @@ const Profile = () => {
             if (form.password) payload.password = form.password
 
             const res = await api.put("/users/me", payload)
-            login(res.data, localStorage.getItem("token"))
-            setMessage("Perfil actualizado correctamente.")
+            login(res.data.user || res.data, localStorage.getItem("token"))
+            setMessage(res.data.message || "Perfil actualizado correctamente.")
             setForm((prev) => ({ ...prev, password: "" }))
         } catch (err) {
             setError(err.response?.data?.message || "Error al actualizar tu perfil.")

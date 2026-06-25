@@ -48,7 +48,7 @@ const ContadorPanel = () => {
         setError("")
         try {
             const res = await api.get("/staff/accounting/orders")
-            setOrders(res.data)
+            setOrders(res.data.orders || res.data)
         } catch (err) {
             setError(err.response?.data?.message || "No se pudo cargar el panel contable")
         } finally {

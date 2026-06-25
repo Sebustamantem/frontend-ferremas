@@ -33,8 +33,9 @@ const AdminCredits = () => {
                 api.get("/users"),
                 api.get("/ferre-credit/all")
             ])
-            setUsers(usersRes.data.filter(u => ["maestro", "pyme", "maestro_pending", "pyme_pending"].includes(u.user_type)))
-            setCredits(creditsRes.data)
+            const usersData = usersRes.data.users || usersRes.data
+            setUsers(usersData.filter(u => ["maestro", "pyme", "maestro_pending", "pyme_pending"].includes(u.user_type)))
+            setCredits(creditsRes.data.credits || creditsRes.data)
         } catch (err) {
             setError(err.response?.data?.message || "Error al cargar FerreCredito")
         } finally {
@@ -45,7 +46,7 @@ const AdminCredits = () => {
     const fetchInstallments = async () => {
         try {
             const res = await api.get("/ferre-credit/all-installments")
-            setInstallments(res.data)
+            setInstallments(res.data.installments || res.data)
         } catch (err) {
             setError(err.response?.data?.message || "Error al cargar cuotas")
         }

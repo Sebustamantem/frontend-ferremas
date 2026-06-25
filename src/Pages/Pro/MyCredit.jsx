@@ -106,8 +106,8 @@ const MyCredit = () => {
                 api.get("/ferre-credit/my"),
                 api.get("/ferre-credit/installments"),
             ])
-            setCredit(creditRes.data)
-            setInstallments(installmentsRes.data)
+            setCredit(creditRes.data.credit || creditRes.data)
+            setInstallments(installmentsRes.data.installments || installmentsRes.data)
         } catch (err) {
             setError(err.response?.data?.message || "No se pudo cargar FerreCredito")
         } finally {

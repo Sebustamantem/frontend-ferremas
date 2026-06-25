@@ -14,7 +14,7 @@ const ProfessionalServices = () => {
 
     useEffect(() => {
         api.get("/services")
-            .then((res) => setServices(res.data.slice(0, 6)))
+            .then((res) => setServices((res.data.services || res.data || []).slice(0, 6)))
             .catch(() => setServices([]))
     }, [])
 

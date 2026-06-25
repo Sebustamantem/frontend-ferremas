@@ -116,7 +116,7 @@ const Checkout = () => {
             .then(res => setMyPoints(Number(res.data.balance || 0)))
             .catch(() => setMyPoints(0))
         api.get("/ferre-credit/my")
-            .then(res => setMyCredit(res.data))
+            .then(res => setMyCredit(res.data.credit || res.data))
             .catch(err => console.error(err))
     }, [])
 
@@ -144,9 +144,10 @@ const Checkout = () => {
         }
         api.get("/users/me")
             .then((res) => {
-                const savedAddress = res.data.address && typeof res.data.address === "object"
-                    ? res.data.address
-                    : res.data.address ? JSON.parse(res.data.address) : null
+                const profile = res.data.user || res.data
+                const savedAddress = profile.address && typeof profile.address === "object"
+                    ? profile.address
+                    : profile.address ? JSON.parse(profile.address) : null
                 if (savedAddress) {
                     setAddress((prev) => ({
                         ...prev,
@@ -154,13 +155,13 @@ const Checkout = () => {
                         receiver: savedAddress.receiver || receiver,
                         apartment: savedAddress.apartment || savedAddress.department || "",
                         reference: savedAddress.reference || "",
-                        phone: normalizePhone(savedAddress.phone || res.data.phone || prev.phone),
+                        phone: normalizePhone(savedAddress.phone || profile.phone || prev.phone),
                     }))
                 } else {
                     setAddress((prev) => ({
                         ...prev,
                         receiver,
-                        phone: normalizePhone(res.data.phone || prev.phone),
+                        phone: normalizePhone(profile.phone || prev.phone),
                     }))
                     setSaveAddress(true)
                 }
@@ -209,7 +210,7 @@ const Checkout = () => {
                     business_name: user.business_name,
                     profession: user.profession,
                 })
-                login(res.data, localStorage.getItem("token"))
+                login(res.data.user || res.data, localStorage.getItem("token"))
             }
 
             if (payMethod === "transbank") {

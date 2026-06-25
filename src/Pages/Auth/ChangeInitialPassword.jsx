@@ -38,8 +38,9 @@ const ChangeInitialPassword = () => {
         setLoading(true)
         try {
             const res = await api.put("/users/me/password", { password: form.password })
-            login(res.data, localStorage.getItem("token"))
-            navigate(getRoleHomePath(res.data.role), { replace: true })
+            const updatedUser = res.data.user || res.data
+            login(updatedUser, localStorage.getItem("token"))
+            navigate(getRoleHomePath(updatedUser.role), { replace: true })
         } catch (err) {
             setError(err.response?.data?.message || "No se pudo cambiar la contraseña")
         } finally {

@@ -36,7 +36,7 @@ export const ProductProvider = ({ children }) => {
         if (!productCache.promise) {
             productCache.promise = api.get("/products")
                 .then((res) => {
-                    productCache.data = res.data || []
+                    productCache.data = res.data.products || res.data.data || res.data || []
                     productCache.fetchedAt = Date.now()
                     return productCache.data
                 })
@@ -76,7 +76,8 @@ export const ProductProvider = ({ children }) => {
         if (!favoriteCache.promise || !isSameUser) {
             favoriteCache.promise = api.get("/products/favorites/my")
                 .then((res) => {
-                    const ids = (res.data || []).map((product) => product.id)
+                    const products = res.data.products || res.data || []
+                    const ids = products.map((product) => product.id)
                     favoriteCache = {
                         userId: user.id,
                         ids,

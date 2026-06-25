@@ -69,8 +69,8 @@ const VendedorPanel = () => {
                 api.get("/staff/orders"),
                 api.get("/staff/clients"),
             ])
-            setOrders(ordersRes.data)
-            setClients(clientsRes.data)
+            setOrders(ordersRes.data.orders || ordersRes.data)
+            setClients(clientsRes.data.clients || clientsRes.data)
         } catch (err) {
             setError(err.response?.data?.message || "No se pudo cargar el panel de vendedor")
         } finally {
@@ -102,7 +102,7 @@ const VendedorPanel = () => {
         setLoadingClientId(clientId)
         try {
             const res = await api.get(`/staff/clients/${clientId}`)
-            setClientDetail(res.data)
+            setClientDetail(res.data.client ? res.data : res.data)
         } catch (err) {
             setNotice({ type: "error", message: err.response?.data?.message || "No se pudo cargar la ficha del cliente" })
             setSelectedClientId(null)

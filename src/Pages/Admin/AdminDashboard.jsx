@@ -80,7 +80,7 @@ const AdminDashboard = () => {
                 if (value) params.append(key, value)
             })
             const res = await api.get(`/staff/admin/activity?${params.toString()}`)
-            setActivity(res.data || [])
+            setActivity(res.data.activity || res.data || [])
         } catch (err) {
             setError(err.response?.data?.message || "No se pudo cargar el historial")
         }

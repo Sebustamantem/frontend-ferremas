@@ -64,7 +64,7 @@ const ProductDetail = () => {
                     return
                 }
                 const res = await api.get(`/products/${id}`)
-                setProduct(res.data)
+                setProduct(res.data.product || res.data)
             } catch (err) {
                 console.error(err)
             } finally {

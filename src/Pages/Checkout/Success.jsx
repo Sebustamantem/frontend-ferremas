@@ -23,7 +23,7 @@ const Success = () => {
     useEffect(() => {
         if (orderId) {
             api.get(`/orders/${orderId}`)
-                .then(res => setOrder(res.data))
+                .then(res => setOrder(res.data.order || res.data))
                 .catch(err => console.error(err))
         }
     }, [orderId])

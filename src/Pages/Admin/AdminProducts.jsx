@@ -74,7 +74,7 @@ const AdminProducts = () => {
         setFetching(true)
         try {
             const res = await api.get("/products")
-            setProducts(res.data)
+            setProducts(res.data.products || res.data.data || res.data)
         } catch (err) {
             console.error(err)
         } finally {
@@ -85,7 +85,7 @@ const AdminProducts = () => {
     const fetchStockReports = async () => {
         try {
             const res = await api.get("/staff/admin/stock-reports")
-            setStockReports(res.data)
+            setStockReports(res.data.reports || res.data)
         } catch (err) {
             console.error(err)
         }
@@ -94,7 +94,7 @@ const AdminProducts = () => {
     const fetchStockMovements = async () => {
         try {
             const res = await api.get("/staff/inventory/stock-movements")
-            setStockMovements(res.data || [])
+            setStockMovements(res.data.movements || res.data || [])
         } catch (err) {
             console.error(err)
         }

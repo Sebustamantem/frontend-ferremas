@@ -40,7 +40,7 @@ export const CartProvider = ({ children }) => {
                     .then((res) => {
                         cartCache = {
                             userId: user.id,
-                            data: res.data || [],
+                            data: res.data.cart || res.data || [],
                             fetchedAt: Date.now(),
                             promise: null,
                         }
