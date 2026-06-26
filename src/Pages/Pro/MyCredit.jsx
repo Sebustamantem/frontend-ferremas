@@ -86,6 +86,7 @@ const MyCredit = () => {
     const [paymentType, setPaymentType] = useState("installment")
     const [customAmount, setCustomAmount] = useState("")
     const [payingId, setPayingId] = useState(null)
+    const [cancellingId, setCancellingId] = useState(null)
 
     useEffect(() => {
         if (!user) return
@@ -98,9 +99,11 @@ const MyCredit = () => {
         if (paymentStatus === "failure") setError("No se pudo confirmar el pago Webpay.")
     }, [searchParams])
 
-    const fetchCredit = async () => {
-        setLoading(true)
-        setError("")
+    const fetchCredit = async ({ silent = false } = {}) => {
+        if (!silent) {
+            setLoading(true)
+            setError("")
+        }
         try {
             const [creditRes, installmentsRes] = await Promise.all([
                 api.get("/ferre-credit/my"),
@@ -109,11 +112,19 @@ const MyCredit = () => {
             setCredit(creditRes.data.credit || creditRes.data)
             setInstallments(installmentsRes.data.installments || installmentsRes.data)
         } catch (err) {
-            setError(err.response?.data?.message || "No se pudo cargar FerreCredito")
+            if (!silent) setError(err.response?.data?.message || "No se pudo cargar FerreCredito")
         } finally {
-            setLoading(false)
+            if (!silent) setLoading(false)
         }
     }
+
+    useEffect(() => {
+        if (!user) return undefined
+        const interval = setInterval(() => {
+            fetchCredit({ silent: true })
+        }, 60000)
+        return () => clearInterval(interval)
+    }, [user])
 
     const handleStartWebpayPayment = async () => {
         if (!paymentTarget) return
@@ -142,6 +153,21 @@ const MyCredit = () => {
             setPayingId(null)
         } finally {
             setPaymentTarget(null)
+        }
+    }
+
+    const handleCancelPendingWebpay = async (installmentId) => {
+        setError("")
+        setNotice("")
+        setCancellingId(installmentId)
+        try {
+            const res = await api.post(`/ferre-credit/installments/${installmentId}/cancel-webpay`)
+            setNotice(res.data.message || "Pago Webpay pendiente cancelado correctamente")
+            await fetchData()
+        } catch (err) {
+            setError(err.response?.data?.message || "No se pudo cancelar el pago pendiente")
+        } finally {
+            setCancellingId(null)
         }
     }
 
@@ -341,7 +367,14 @@ const MyCredit = () => {
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         {item.effective_status === "webpay_pending" ? (
-                                                            <span className="text-xs font-semibold text-orange-600">Webpay pendiente</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleCancelPendingWebpay(item.id)}
+                                                                disabled={cancellingId === item.id}
+                                                                className="rounded-xl bg-orange-50 px-4 py-2 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 disabled:opacity-60"
+                                                            >
+                                                                {cancellingId === item.id ? "Cancelando..." : "Cancelar pendiente"}
+                                                            </button>
                                                         ) : (item.effective_status || item.status) !== "completed" && getRemainingDebt(item) > 0 ? (
                                                             <button
                                                                 type="button"
