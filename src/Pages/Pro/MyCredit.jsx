@@ -99,9 +99,19 @@ const MyCredit = () => {
 
     useEffect(() => {
         const paymentStatus = searchParams.get("payment")
+        if (!paymentStatus) return undefined
+
         if (paymentStatus === "success") setNotice("Pago Webpay confirmado correctamente.")
         if (paymentStatus === "failure") setError("Webpay no aprobó el pago o el intento venció. Puedes volver a intentarlo.")
-    }, [searchParams])
+        navigate("/mi-credito", { replace: true })
+
+        const timer = setTimeout(() => {
+            if (paymentStatus === "success") setNotice("")
+            if (paymentStatus === "failure") setError("")
+        }, 8000)
+
+        return () => clearTimeout(timer)
+    }, [searchParams, navigate])
 
     const fetchCredit = async ({ silent = false } = {}) => {
         if (!silent) {
