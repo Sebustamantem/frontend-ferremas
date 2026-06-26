@@ -74,7 +74,7 @@ const BADGE_CLASSES = {
 }
 
 const MyCredit = () => {
-    const { user } = useAuth()
+    const { user, authLoading } = useAuth()
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const [credit, setCredit] = useState(null)
@@ -88,9 +88,14 @@ const MyCredit = () => {
     const [payingId, setPayingId] = useState(null)
 
     useEffect(() => {
-        if (!user) return
+        if (authLoading) return
+        if (!user) {
+            setLoading(false)
+            navigate("/login")
+            return
+        }
         fetchCredit()
-    }, [user])
+    }, [user, authLoading, navigate])
 
     useEffect(() => {
         const paymentStatus = searchParams.get("payment")
@@ -104,14 +109,26 @@ const MyCredit = () => {
             setError("")
         }
         try {
-            const [creditRes, installmentsRes] = await Promise.all([
+            const [creditResult, installmentsResult] = await Promise.allSettled([
                 api.get("/ferre-credit/my"),
                 api.get("/ferre-credit/installments"),
             ])
-            setCredit(creditRes.data.credit || creditRes.data)
-            setInstallments(installmentsRes.data.installments || installmentsRes.data)
+
+            if (creditResult.status === "fulfilled") {
+                const data = creditResult.value.data
+                setCredit(data.credit || data)
+            }
+            if (installmentsResult.status === "fulfilled") {
+                const data = installmentsResult.value.data
+                setInstallments(data.installments || data)
+            }
+
+            if (creditResult.status === "rejected" || installmentsResult.status === "rejected") {
+                const rejected = creditResult.status === "rejected" ? creditResult.reason : installmentsResult.reason
+                throw rejected
+            }
         } catch (err) {
-            if (!silent) setError(err.response?.data?.message || "No se pudo cargar FerreCredito")
+            if (!silent) setError(err.response?.data?.message || "No se pudo cargar FerreCredito. Intenta recargar la pagina.")
         } finally {
             if (!silent) setLoading(false)
         }
