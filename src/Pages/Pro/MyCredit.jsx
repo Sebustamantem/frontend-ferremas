@@ -86,7 +86,6 @@ const MyCredit = () => {
     const [paymentType, setPaymentType] = useState("installment")
     const [customAmount, setCustomAmount] = useState("")
     const [payingId, setPayingId] = useState(null)
-    const [cancellingId, setCancellingId] = useState(null)
 
     useEffect(() => {
         if (!user) return
@@ -96,7 +95,7 @@ const MyCredit = () => {
     useEffect(() => {
         const paymentStatus = searchParams.get("payment")
         if (paymentStatus === "success") setNotice("Pago Webpay confirmado correctamente.")
-        if (paymentStatus === "failure") setError("No se pudo confirmar el pago Webpay.")
+        if (paymentStatus === "failure") setError("Webpay no aprobó el pago o el intento venció. Puedes volver a intentarlo.")
     }, [searchParams])
 
     const fetchCredit = async ({ silent = false } = {}) => {
@@ -153,21 +152,6 @@ const MyCredit = () => {
             setPayingId(null)
         } finally {
             setPaymentTarget(null)
-        }
-    }
-
-    const handleCancelPendingWebpay = async (installmentId) => {
-        setError("")
-        setNotice("")
-        setCancellingId(installmentId)
-        try {
-            const res = await api.post(`/ferre-credit/installments/${installmentId}/cancel-webpay`)
-            setNotice(res.data.message || "Pago Webpay pendiente cancelado correctamente")
-            await fetchData()
-        } catch (err) {
-            setError(err.response?.data?.message || "No se pudo cancelar el pago pendiente")
-        } finally {
-            setCancellingId(null)
         }
     }
 
@@ -367,14 +351,9 @@ const MyCredit = () => {
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         {item.effective_status === "webpay_pending" ? (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleCancelPendingWebpay(item.id)}
-                                                                disabled={cancellingId === item.id}
-                                                                className="rounded-xl bg-orange-50 px-4 py-2 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 disabled:opacity-60"
-                                                            >
-                                                                {cancellingId === item.id ? "Cancelando..." : "Cancelar pendiente"}
-                                                            </button>
+                                                            <span className="text-xs font-semibold text-orange-600">
+                                                                Se libera automatico en 5 min
+                                                            </span>
                                                         ) : (item.effective_status || item.status) !== "completed" && getRemainingDebt(item) > 0 ? (
                                                             <button
                                                                 type="button"
