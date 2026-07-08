@@ -49,7 +49,7 @@ const ChangeInitialPassword = () => {
     }
 
     return (
-        <div className="min-h-screen brand-page flex items-center justify-center px-4 py-10">
+        <div className="min-h-[calc(100vh-12rem)] brand-page flex items-center justify-center px-4 py-8">
             <div className="brand-card rounded-2xl border shadow-xl w-full max-w-md p-8">
                 <div className="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center mb-5">
                     <LockKeyhole size={24} />

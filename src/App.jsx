@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react"
+import { lazy, Suspense, useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom"
 import Navbar from "./components/layout/Navbar"
 import Footer from "./components/layout/Footer"
@@ -30,6 +30,16 @@ const Favorites = lazy(() => import("./Pages/Favorites/Favorites"))
 const ChangeInitialPassword = lazy(() => import("./Pages/Auth/ChangeInitialPassword"))
 const ForgotPassword = lazy(() => import("./Pages/Auth/ForgotPassword"))
 const ResetPassword = lazy(() => import("./Pages/Auth/ResetPassword"))
+
+const ScrollToTop = () => {
+  const { pathname, search } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 })
+  }, [pathname, search])
+
+  return null
+}
 
 const ProtectedRoute = ({ children }) => {
   const { user, authLoading } = useAuth()
@@ -134,6 +144,7 @@ const RouteLoader = () => (
 const App = () => {
   return (
     <Router>
+      <ScrollToTop />
       <AppContent />
     </Router>
   )
